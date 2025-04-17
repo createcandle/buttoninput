@@ -26,7 +26,7 @@
   "name": "buttoninput",
   "options": {
     "default": {
-	  "Update frequency": 90,
+      "Update frequency": 90,
       "Debugging": false
     },
     "schema": {
@@ -51,8 +51,8 @@
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
-	"images/*.png",
-	"images/*.jpg",
+    "images/*.png",
+    "images/*.jpg",
     "js/*.js",
     "views/*.html"
   ]
