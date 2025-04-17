@@ -37,7 +37,6 @@ jobs:
           'linux-arm64'
         ]
         pair: [
-          'node:12',
           'node:18',
         ]
         include:
@@ -45,9 +44,6 @@ jobs:
             host-os: 'ubuntu-latest'
           - platform: 'linux-arm64'
             host-os: 'ubuntu-latest'
-          - pair: 'node:12'
-            language: 'node'
-            version: '12'
           - pair: 'node:18'
             language: 'node'
             version: '18'
