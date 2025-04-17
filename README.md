@@ -4,4 +4,4 @@ Connect (Bluetooth) keyboards, mice or game controllers to your Candle controlle
 
 You can select which buttons you want to track, and set the frequency with which sensors may be updated (default is maximum 10x per second)
 
-![Screenshot](https://github.com/createcandle/buttoninput/blob/master/screenshot.png?raw=true)
+![Screenshot](https://github.com/createcandle/buttoninput/blob/main/screenshot.png?raw=true)
