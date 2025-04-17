@@ -66,7 +66,7 @@ class ButtonInputAdapter(Adapter):
         self.inputs = [] # holds the evdev event objects
         self.input_data = {} # holds data that can be sent to the front-end
         
-        self.rate_limit = 1        
+        self.rate_limit = 0.1        
         
         # There is a very useful variable called "user_profile" that has useful values from the controller.
         #print("self.user_profile: " + str(self.user_profile))
@@ -414,80 +414,109 @@ class ButtonInputAdapter(Adapter):
                                 
                         
                         elif event_category.startswith('key event') and 'EV_KEY' in self.input_data[device.path]['capabilities']:
+                            #print("event_category RAW: ", event_category)
                             
-                            key_code = str(event_category.split(', ')[1])
-                            #print("initial button keycode: " + str(key_code))
-                            
+                            key_code = event_category
                             short_code_detail = ''
+                            short_codes = []
                             
-                            if '(' in key_code:
-                                
-                                if '((' in key_code:
-                                    number_code = int(key_code.split('((')[0])
-                                    short_code = key_code.split('((')[1]
-                                    #short_code = key_code.split('))')[0]
-                                    short_code_detail = event_category.split('))')[1]
-                                    
-                                    if "," in short_code:
-                                        short_code = short_code.split(",")[0]
-                                    
-                                    
-                                else:
-                                    number_code = key_code.split('(')[0]
-                                    key_code = key_code.split('(')[1]
-                                    if ')' in key_code:
-                                        short_code = key_code.split(')')[0]
-                                        short_code_detail = key_code.split(')')[1]
-                                
-                                short_code = short_code.replace("'","")
-                                short_code = short_code.strip()
-                                short_code_detail = short_code_detail.replace(',','')
-                                short_code_detail = short_code_detail.strip()
-                                
-                                    #short_code = short_code.replace('KEY_','')
-                                    #short_code = short_code.replace('BTN_','')
-                                
-                                #print("button short_code: " + str(short_code))
-                                #print("button short_code_detail: " + str(short_code_detail))
-                        
-                                if 'children' in self.input_data[device.path]['capabilities']['EV_KEY'] and short_code in self.input_data[device.path]['capabilities']['EV_KEY']['children']:
-                                    #print("found button short_code in capabilities: ", short_code)
+                            if not ', ' in event_category:
+                                if self.DEBUG:
+                                    print("unexpected event_category formatting - not a single comma spotted")
+                                continue
                             
-                                    self.input_data[device.path]['capabilities']['EV_KEY']['children'][short_code]['last_time'] = int(event.sec)
+                            
+                            
+                            key_code_parts = event_category.split(', ')
+                            
+                            
+                            if len(key_code_parts) > 1:
+                                short_code_detail = str(key_code_parts[ len(key_code_parts) - 1 ]).strip()
+                                #if self.DEBUG:
+                                #    print("initial short_code_detail: " + str(short_code_detail))
+                            
+                            
+                                if '(' in key_code:
+                                
+                                    # sometimes a key press can return multiple codes, which are aliases for the same key.
+                                
+                                    if '((' in key_code:
+                                        number_code = int(key_code_parts[1].split('((')[0])
+                                        key_code = key_code.split('((')[1]
+                                        if '))' in key_code:
+                                            key_code = key_code.split('))')[0]
                                     
-                                    if not 'children' in self.input_data[device.path]['capabilities']['EV_KEY']['children'][short_code]:
-                                        self.input_data[device.path]['capabilities']['EV_KEY']['children'][short_code]['children'] = {}
-                                    if not short_code_detail in self.input_data[device.path]['capabilities']['EV_KEY']['children'][short_code]['children']:
-                                        self.input_data[device.path]['capabilities']['EV_KEY']['children'][short_code]['children'][short_code_detail] = {'keycode':int(number_code)}
-                                    self.input_data[device.path]['capabilities']['EV_KEY']['children'][short_code]['children'][short_code_detail]['last_time'] = int(event.sec)
+                                        key_code.replace('(','')
+                                        key_code.replace(')','')
                                     
-                                    thingy = self.get_device(str(self.input_data[device.path]['nice_name']))
-                                    #print("button thingy: ", thingy)
-                                    
-                                    #properties_dict = thingy.get_property_descriptions()
-                                    #print("button properties_dict: ", properties_dict)
-                                    #print("button short_code: ", short_code)
-                                    
-                                    propy = thingy.find_property(short_code)
-                                    if propy:
-                                        #print("found button short_code property too")
-                                        if propy.set_cached_value_and_notify(bool(event.value)):
-                                            #print("OK, button value set")
-                                            pass
+                                        if "," in key_code:
+                                            short_codes = key_code.split(",")
                                         else:
-                                            #print("FAILED TO SET BUTTON VALUE")
-                                            pass
-                            
+                                            short_codes.append(key_code)
+                                    
+                                    
+                                    else:
+                                        number_code = key_code_parts[1].split('(')[0]
+                                        key_code = key_code.split('(')[1]
+                                        if ')' in key_code:
+                                            short_codes.append( key_code.split(')')[0] )
+                                            #short_code_detail = key_code.split(')')[1]
                                 
-                                #try:
-                                #    self.devices[ str(self.input_data[device.path]['nice_name']) ].get_props()[short_code].update(bool(event.value)   
-                                #except Exception as ex:
-                                #    print("caught error in trying to go around thing update issue: " + str(ex))
+                                    if self.DEBUG:
+                                        print("number_code: ", number_code)
+                                        print("short_codes list: ", short_codes)
                                 
-                            
-                            #else:
-                            #    print("ERROR, no brackets in button keycode string?")                
+                                    for short_code in short_codes:
+                                        #print("SC: ", short_code)
+                                        
+                                        short_code = short_code.replace("'","")
+                                        short_code = short_code.strip()
+                                    
+                                
+                                            #short_code = short_code.replace('KEY_','')
+                                            #short_code = short_code.replace('BTN_','')
+                                
+                                        #print("button short_code: " + str(short_code))
+                                        #print("button short_code_detail: " + str(short_code_detail))
                         
+                                        if 'children' in self.input_data[device.path]['capabilities']['EV_KEY'] and short_code in self.input_data[device.path]['capabilities']['EV_KEY']['children']:
+                                            #print("found button short_code in capabilities: ", short_code)
+                            
+                                            self.input_data[device.path]['capabilities']['EV_KEY']['children'][short_code]['last_time'] = int(event.sec)
+                                    
+                                            if not 'children' in self.input_data[device.path]['capabilities']['EV_KEY']['children'][short_code]:
+                                                self.input_data[device.path]['capabilities']['EV_KEY']['children'][short_code]['children'] = {}
+                                            if not short_code_detail in self.input_data[device.path]['capabilities']['EV_KEY']['children'][short_code]['children']:
+                                                self.input_data[device.path]['capabilities']['EV_KEY']['children'][short_code]['children'][short_code_detail] = {'keycode':int(number_code)}
+                                            self.input_data[device.path]['capabilities']['EV_KEY']['children'][short_code]['children'][short_code_detail]['last_time'] = int(event.sec)
+                                    
+                                            thingy = self.get_device(str(self.input_data[device.path]['nice_name']))
+                                            #print("button thingy: ", thingy)
+                                    
+                                            #properties_dict = thingy.get_property_descriptions()
+                                            #print("button properties_dict: ", properties_dict)
+                                            #print("button short_code: ", short_code)
+                                    
+                                            propy = thingy.find_property(short_code)
+                                            if propy:
+                                                #print("found button short_code property too")
+                                                if propy.set_cached_value_and_notify(bool(event.value)):
+                                                    #print("OK, button value set")
+                                                    pass
+                                                else:
+                                                    #print("FAILED TO SET BUTTON VALUE")
+                                                    pass
+                            
+                                
+                                    #try:
+                                    #    self.devices[ str(self.input_data[device.path]['nice_name']) ].get_props()[short_code].update(bool(event.value)   
+                                    #except Exception as ex:
+                                    #    print("caught error in trying to go around thing update issue: " + str(ex))
+                                
+                            
+                                #else:
+                                #    print("ERROR, no brackets in button keycode string?")                
+                                
                     
                             
                             
@@ -604,7 +633,14 @@ class ButtonInputDevice(Device):
             
                 clean_prop_name = prop_key.replace('BTN_','').replace('KEY_','').replace('ABS_','').replace('REL_','')
             
-                if 'min' in prop_details:
+                
+            
+                if 'min' in prop_details and 'max' in prop_details:
+                    
+                    #starting_value = None # int(prop_details['min'])
+                    #if int(prop_details['min']) < 0 and int(prop_details['max']) > 0:
+                    #    starting_value = 0
+                    
                     self.properties[prop_key] = ButtonInputProperty(
                                     self,
                                     prop_key,
@@ -616,7 +652,7 @@ class ButtonInputDevice(Device):
                                         'minimum': int(prop_details['min']),
                                         'maximum': int(prop_details['max']),
                                     },
-                                    int(prop_details['min']) 
+                                    None
                                     )
                                     #random.randint(int(prop_details['min']), int(prop_details['max'])) )
                 
@@ -709,6 +745,7 @@ class ButtonInputProperty(Property):
             self.device.notify_property_changed(self)
 
         return has_changed
+        
 
     def set_cached_value(self, value):
         if 'type' in self.description and \
@@ -719,8 +756,10 @@ class ButtonInputProperty(Property):
 
         return self.value
 
+
     def get_value(self):
         return self.value
+
 
     def set_value(self, value):
         if 'readOnly' in self.description and self.description['readOnly']:
