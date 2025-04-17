@@ -242,7 +242,7 @@
 					}
 
     	        ).then((body) => {
-                	console.log("rescan response: ", body);
+                	//console.log("rescan response: ", body);
 					
 					if(typeof body.persistent_data != 'undefined'){
 						this.persistent_data = body.persistent_data;
@@ -267,7 +267,7 @@
 		if(save_button_el){
 			save_button_el.style.display = 'none';
 			save_button_el.addEventListener('click', () => {
-				console.log("clicked on save_persistent_data button");
+				//console.log("clicked on save_persistent_data button");
 				save_button_el.style.display = 'none';
 				
     	  		// Get list of items
@@ -278,7 +278,7 @@
 					}
 
     	        ).then((body) => {
-                	console.log("save_persistent_data response: ", body);
+                	//console.log("save_persistent_data response: ", body);
 					
 					if(typeof body.state == 'boolean' && body.state == true){
 						//save_button_el.style.display = 'none';
@@ -337,7 +337,7 @@
 	
 	get_input_data(){
 		
-		console.log("in get_input_data");
+		//console.log("in get_input_data");
 		
   		// Get updated data
         window.API.postJson(
@@ -347,7 +347,7 @@
 			}
 
         ).then((body) => {
-        	console.log("get_input_data response: ", body);
+        	//console.log("get_input_data response: ", body);
 			
 			if(typeof body.persistent_data != 'undefined' && body.persistent_data != null){
 				this.persistent_data = body.persistent_data;
@@ -399,8 +399,8 @@
 	
 	handle_input_data(input_data){
 		
-		console.log("buttoninput: in handle_input_data.  input_data: ", input_data);
-		console.log("buttoninput: in handle_input_data.  persistent_data: ", this.persistent_data);
+		//console.log("buttoninput: in handle_input_data.  input_data: ", input_data);
+		//console.log("buttoninput: in handle_input_data.  persistent_data: ", this.persistent_data);
 		
 		const overview_el = document.getElementById('extension-buttoninput-overview');
 		if(overview_el){
@@ -423,8 +423,8 @@
 				//console.log("typeof value.capabilities: ", typeof value.capabilities, value.capabilities);
 				
 				const nice_name = value.nice_name;
-				console.log("nice_name: ", nice_name);
-				
+				//console.log("nice_name: ", nice_name);
+				.wan
 				const process_tree = (node_name, node, element,depth=1) => {
 					//console.log("in process_tree.  node_name, node: ", node_name, node);
 					//console.log("root key: ", key);
@@ -434,7 +434,7 @@
 					
 					const li_title_span_el = document.createElement('span');
 					
-					let display_name = node_name.replace('buttoninput_','');
+					let display_name = node_name.replace('buttoninput','').replace('_',' ');
 					
 					if(node_name.endsWith('ABS')){
 						display_name = 'Positions';
@@ -491,11 +491,11 @@
 					
 					if(depth >= 4){
 						li_title_el.addEventListener('click', () => {
-							console.log("clicked on overview item.  node_name: ", node_name, node);
-							console.log("this.persistent_data: ", this.persistent_data);
+							//console.log("clicked on overview item.  node_name: ", node_name, node);
+							//console.log("this.persistent_data: ", this.persistent_data);
 							
 							if(typeof node == 'number'){
-								console.log("node is a number");
+								//console.log("node is a number");
 							}
 							
 							
@@ -511,7 +511,7 @@
 								this.persistent_data['things'][nice_name][node_name] = {};
 							}
 							else{
-								console.warn("nice, button already exists in persistent data: ", this.persistent_data['things'][nice_name][node_name]);
+								//console.warn("nice, button already exists in persistent data: ", this.persistent_data['things'][nice_name][node_name]);
 							}
 							
 							if(typeof this.persistent_data['things'][nice_name][node_name]['enabled'] == 'undefined'){
