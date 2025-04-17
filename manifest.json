@@ -1,0 +1,59 @@
+{
+  "author": "CandleSmartHome.com",
+  "content_scripts": [
+    {
+      "css": [
+        "css/extension.css"
+      ],
+      "js": [
+        "js/extension.js"
+      ]
+    }
+  ],
+  "description": "Use the buttons and sensors of (Bluetooth) connected keyboards, mice and game controllers",
+  "gateway_specific_settings": {
+    "webthings": {
+      "exec": "python3 {path}/main.py",
+      "primary_type": "extension",
+      "strict_max_version": "*",
+      "strict_min_version": "0.10.0"
+    }
+  },
+  "homepage_url": "https://github.com/createcandle/buttoninput-addon",
+  "id": "buttoninput",
+  "license": "MPL-2.0",
+  "manifest_version": 1,
+  "name": "buttoninput",
+  "options": {
+    "default": {
+	  "Update frequency": 90,
+      "Debugging": false
+    },
+    "schema": {
+      "properties": {
+        "Update frequency": {
+          "description": "Some devices send a lot of updates, for example about a controller's Y and Y position. To avoid overwhelming the system, it's possible to limit the frequency with which updates are accepted. You can very this between 0 (slow, once very second) to 100 (no limitation, instant). 50 would be once every half a second.  The default speed is 90, which gives a maximum rate of 0.1 seconds. Note that button presses are never rate limited, and will always work instantly.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "Debugging": {
+          "description": "Advanced. Debugging allows you to diagnose any issues with the add-on. If enabled it will result in a lot more debug data in the internal log (which can be found under settings -> developer -> view internal logs).",
+          "type": "boolean"
+        }			
+      },
+      "required": [],
+      "type": "object"
+    }
+  },
+  "short_name": "buttoninput",
+  "version": "0.0.1",
+  "web_accessible_resources": [
+    "css/*.css",
+    "images/*.svg",
+	"images/*.png",
+	"images/*.jpg",
+    "js/*.js",
+    "views/*.html"
+  ]
+}
