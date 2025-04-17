@@ -1,2 +1,7 @@
-# buttoninput
-An addon for the Candle Controller for using keyboards, mice and game controller buttons and sensors
+# Button Input
+
+Connect (Bluetooth) keyboards, mice or game controllers to your Candle controller, and use their buttons and sensors. 
+
+You can select which buttons you want to track, and set the frequency with which sensors may be updated (default is maximum 10x per second)
+
+![Screenshot](https://github.com/createcandle/buttoninput/blob/master/screenshot.png?raw=true)
