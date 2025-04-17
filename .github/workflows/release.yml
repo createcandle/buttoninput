@@ -37,16 +37,16 @@ jobs:
           'linux-arm64'
         ]
         pair: [
-          'node:18',
+          'python:3.9',
         ]
         include:
           - platform: 'linux-arm'
             host-os: 'ubuntu-latest'
           - platform: 'linux-arm64'
             host-os: 'ubuntu-latest'
-          - pair: 'node:18'
-            language: 'node'
-            version: '18'
+          - pair: 'python:3.9'
+            language: 'python'
+            version: '3.9'
             
     runs-on: ${{ matrix.host-os }}
 
