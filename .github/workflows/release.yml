@@ -39,7 +39,6 @@ jobs:
         pair: [
           'node:12',
           'node:18',
-          'node:20',
         ]
         include:
           - platform: 'linux-arm'
@@ -52,9 +51,6 @@ jobs:
           - pair: 'node:18'
             language: 'node'
             version: '18'
-          - pair: 'node:20'
-            language: 'node'
-            version: '20'
             
     runs-on: ${{ matrix.host-os }}
 
@@ -88,7 +84,7 @@ jobs:
       with:
         #upload_url: ${{ github.event.release.upload_url }}
         upload_url: ${{ env.UPLOAD_URL }}
-        asset_path: zigbee2mqtt-adapter-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}-v${{ matrix.version }}.tgz
+        asset_path: buttoninput-${{ env.RELEASE_VERSION }}-${{ matrix.platform }}-v${{ matrix.version }}.tgz
         overwrite: true
       
     - name: Upload Release Asset shasum
