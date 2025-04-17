@@ -357,13 +357,18 @@
 }
 
 #extension-buttoninput-overview h4{
-	margin:0;
-	padding:1rem;
+    padding: 1rem 1.5rem;
+    cursor: pointer;
+    margin-bottom: .5rem;
+    background-color: rgba(255,255,255, .1);
+    border-radius: .7rem;
+}
+#extension-buttoninput-overview h4:hover{
+	background-color: rgba(0, 0, 0, .3);
 }
 
 #extension-buttoninput-overview h5{
-	margin:0;
-	padding:0.2rem 1rem;
+	margin: 0;
 }
 
 #extension-buttoninput-overview > ul{
@@ -389,9 +394,12 @@ body:not(.developer) .extension-buttoninput-overview-flat,
 body:not(.developer) .extension-buttoninput-overview-resolution,
 body:not(.developer) .extension-buttoninput-overview-ev_syn,
 body:not(.developer) .extension-buttoninput-overview-synchronisations,
-body:not(.developer) .extension-buttoninput-overview-miscelaneous{
+body:not(.developer) .extension-buttoninput-overview-miscelaneous,
+body:not(.developer) .extension-buttoninput-show-if-developer{
 	display:none;
 }
+
+
 
 
 
@@ -473,9 +481,11 @@ span.extension-buttoninput-overview-value{
 	display:none;
 }
 
+/*
 #extension-buttoninput-content:not(.extension-buttoninput-busy-scanning) .extension-buttoninput-overview-selected{
 	background-color:purple;
 }
+*/
 
 .extension-buttoninput-overview-selected:after{
 	content:'✅';
@@ -483,8 +493,13 @@ span.extension-buttoninput-overview-value{
 }
 
 
-
-
+ 
+.extension-buttoninput-overview-depth4 > li{
+	border-radius:.7rem;
+}
+.extension-buttoninput-overview-depth5{
+	padding-bottom:.5rem;
+}
 
 
 

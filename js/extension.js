@@ -424,7 +424,7 @@
 				
 				const nice_name = value.nice_name;
 				//console.log("nice_name: ", nice_name);
-				.wan
+				
 				const process_tree = (node_name, node, element,depth=1) => {
 					//console.log("in process_tree.  node_name, node: ", node_name, node);
 					//console.log("root key: ", key);
@@ -434,7 +434,7 @@
 					
 					const li_title_span_el = document.createElement('span');
 					
-					let display_name = node_name.replace('buttoninput','').replace('_',' ');
+					let display_name = node_name.replace('buttoninput','').replaceAll('_',' ');
 					
 					if(node_name.endsWith('ABS')){
 						display_name = 'Positions';
@@ -489,7 +489,7 @@
 				    li_title_span_el.textContent = display_name;
 					li_title_el.appendChild(li_title_span_el);
 					
-					if(depth >= 4){
+					if(depth == 4){
 						li_title_el.addEventListener('click', () => {
 							//console.log("clicked on overview item.  node_name: ", node_name, node);
 							//console.log("this.persistent_data: ", this.persistent_data);
@@ -547,7 +547,7 @@
 					
 					
 					
-					if(typeof node.value != 'undefined' || typeof node == 'number'){
+					if(typeof node == 'number'){ // typeof node.value != 'undefined' || 
 						//console.warn("FOUND VALUE!: ", node_name, node.value, node);
 						const li_value_el = document.createElement('span');
 						
