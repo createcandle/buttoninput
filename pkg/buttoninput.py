@@ -13,8 +13,8 @@ sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'lib'))
 import json
 import time
 
-#import evdev
-from evdev import InputDevice, categorize, ecodes, list_devices
+import evdev
+#from evdev import InputDevice, categorize, ecodes, list_devices
 
 import asyncio
 
@@ -230,7 +230,7 @@ class ButtonInputAdapter(Adapter):
         self.inputs = []
         self.input_data = {}
         
-        self.inputs = [InputDevice(path) for path in list_devices()]
+        self.inputs = [evdev.InputDevice(path) for path in evdev.list_devices()]
         
         if self.DEBUG:
             print("scan_devices: len(self.inputs): " + str(len(self.inputs)))
@@ -307,7 +307,7 @@ class ButtonInputAdapter(Adapter):
         try:
             async for event in device.async_read_loop():
                 
-                event_category = str(categorize(event))
+                event_category = str(evdev.categorize(event))
             
                 #print("event_category: " + str(event_category))
                 
@@ -329,7 +329,7 @@ class ButtonInputAdapter(Adapter):
                     
                     #if self.input_data[device.path]['has_buttons'] == True:
                         
-                        #print("_OK_" , device.path, categorize(event), event, sep=': ')
+                        #print("_OK_" , device.path, evdev.categorize(event), event, sep=': ')
                         
                         #print("VAL! " + str(event.value))
                         
@@ -341,7 +341,7 @@ class ButtonInputAdapter(Adapter):
 
                     
                     #if self.input_data[device.path]['has_buttons'] == True:
-                    #    print("X" , device.path, categorize(event), event, sep=': ')
+                    #    print("X" , device.path, evdev.categorize(event), event, sep=': ')
                     
                     #else:
                     #    continue
@@ -349,11 +349,11 @@ class ButtonInputAdapter(Adapter):
                 
                 
                 
-                if event.type == ecodes.EV_KEY or event_category.startswith('key event') or (event_category.startswith('absolute axis event') and self.input_data[device.path]['has_buttons'] == True):
+                if event.type == evdev.ecodes.EV_KEY or event_category.startswith('key event') or (event_category.startswith('absolute axis event') and self.input_data[device.path]['has_buttons'] == True):
                     
-                    #print(device.path, categorize(event), sep=': ')
+                    #print(device.path, evdev.categorize(event), sep=': ')
                     #print("event: " + str(event))
-                    #print("categorize(event): " + str(categorize(event)))
+                    #print("evdev.categorize(event): " + str(evdev.categorize(event)))
             
                     self.input_data[device.path]['has_buttons'] = True
                     
@@ -373,7 +373,7 @@ class ButtonInputAdapter(Adapter):
                                     if (self.input_data[device.path]['capabilities']['EV_ABS']['children'][abs_code]['last_time'] < time.time() - self.rate_limit) or ('max' in self.input_data[device.path]['capabilities']['EV_ABS']['children'][abs_code].keys() and self.input_data[device.path]['capabilities']['EV_ABS']['children'][abs_code]['max'] == 1):
                                         self.input_data[device.path]['capabilities']['EV_ABS']['children'][abs_code]['last_time'] = time.time()
                                         
-                                        #print(device.path, categorize(event), sep=': ')
+                                        #print(device.path, evdev.categorize(event), sep=': ')
                                         #print("event: " + str(event))
                                         
                                         if 'nice_name' in self.input_data[device.path]: # and self.input_data[device.path]['nice_name'] in self.devices.keys():
