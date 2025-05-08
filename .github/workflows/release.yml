@@ -43,11 +43,11 @@ jobs:
     - name: Make packaging script executable
       run: chmod +x ./build/package.sh
     - uses: uraimo/run-on-arch-action@v2
-      name: Build on ubuntu-20.04 aarch64
+      name: Build on ubuntu-22.04 aarch64
       id: runcmd
       with:
         arch: aarch64
-        distro: ubuntu20.04
+        distro: ubuntu22.04
         setup: |
           echo "."
           echo ".."
