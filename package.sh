@@ -50,6 +50,8 @@ ls /usr/bin/python*
 
 update-alternatives --install /usr/bin/python python /usr/bin/python3.11 2
 
+echo "Python3 version after install and update-alternatives:"
+python3 --version
 
 apt install -y python3-distutils-extra
 apt-get update -q
@@ -260,7 +262,7 @@ echo "PACKAGE.SH ALMOST THERE FOR PYTHON LIBS"
 echo "LS lib after second round of pip:"
 ls lib
 
-python3.11 -m pip install -r requirements.txt -t lib --no-cache-dir --no-binary  :all: --prefix ""
+python3.11 -m pip install -r requirements.txt -t lib --no-cache-dir --no-binary :all: --prefix ""
 
 
 # Put package together
