@@ -98,7 +98,7 @@ apt install -y \
 echo ""
 echo "."
 
-echo "Attempting Phthon 3.11 dev modules"
+echo "Attempting Python 3.11 dev modules"
 apt install -y pkg-config python3.11-dev libpython3.11-dev
 
 #echo "Attempting libcairo install"
