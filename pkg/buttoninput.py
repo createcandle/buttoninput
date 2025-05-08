@@ -124,13 +124,18 @@ class ButtonInputAdapter(Adapter):
 
         self.save_persistent_data()
         
-        self.scan_devices()
+        
         
         self.generate_things()
         
-        self.asyncio_loop = asyncio.get_event_loop()
+        #self.asyncio_loop = asyncio.get_event_loop()
         
-        self.asyncio_loop.run_forever()
+        #self.asyncio_loop = asyncio.new_event_loop()
+        #asyncio.set_event_loop(self.asyncio_loop)
+        
+        self.scan_devices()
+        
+        #self.asyncio_loop.run_forever()
         
         # The addon is now ready
         self.ready = True 
@@ -230,6 +235,25 @@ class ButtonInputAdapter(Adapter):
         self.inputs = []
         self.input_data = {}
         
+        try:
+            if self.asyncio_loop:
+                
+                for task in asyncio.Task.all_tasks():
+                    task.cancel()
+                    
+                self.asyncio_loop.stop()
+                print("scan_devices: closed old loop")
+                    
+        except Exception as ex:
+            if self.DEBUG:
+                print("caught error cancelling asyncio tasks: " + str(ex))
+        
+        self.asyncio_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.asyncio_loop)
+        
+        
+        
+        
         self.inputs = [evdev.InputDevice(path) for path in evdev.list_devices()]
         
         if self.DEBUG:
@@ -296,8 +320,27 @@ class ButtonInputAdapter(Adapter):
             except Exception as ex:
                 if self.DEBUG:
                     print("caught ERROR looping over input events: " + str(ex))
+                
+                """
+                if 'There is no current event loop in thread' in str(ex):
+                    if self.DEBUG:
+                        print("atempting to create new event loop")
+                    
+                    try:
+                        self.asyncio_loop = asyncio.new_event_loop()
+                        asyncio.set_event_loop(self.asyncio_loop)
+                    
+                    except Exception as ex:
+                        if self.DEBUG:
+                            print("double error: failed to create new event loop after catching errot that there is no loop: " + str(ex))
+                """
+                    
+                    
             
             event_index += 1
+        
+        if len(self.inputs):
+            self.asyncio_loop.run_forever()
         
         return
         
@@ -383,7 +426,11 @@ class ButtonInputAdapter(Adapter):
                                             thingy = self.get_device(str(self.input_data[device.path]['nice_name']))
                                             #print("thingy: ", thingy)
                                             
-                                            if thingy:
+                                            if not thingy:
+                                                
+                                                #print("No thing")
+                                                pass
+                                            elif thingy != None:
                                                 
                                                 #properties_dict = thingy.get_property_descriptions()
                                                 #print("in this properties_dict: ", properties_dict.keys())
@@ -414,7 +461,8 @@ class ButtonInputAdapter(Adapter):
                                 
                         
                         elif event_category.startswith('key event') and 'EV_KEY' in self.input_data[device.path]['capabilities']:
-                            #print("event_category RAW: ", event_category)
+                            if self.DEBUG:
+                                print("event_category RAW: ", event_category)
                             
                             key_code = event_category
                             short_code_detail = ''
@@ -496,16 +544,17 @@ class ButtonInputAdapter(Adapter):
                                             #properties_dict = thingy.get_property_descriptions()
                                             #print("button properties_dict: ", properties_dict)
                                             #print("button short_code: ", short_code)
-                                    
-                                            propy = thingy.find_property(short_code)
-                                            if propy:
-                                                #print("found button short_code property too")
-                                                if propy.set_cached_value_and_notify(bool(event.value)):
-                                                    #print("OK, button value set")
-                                                    pass
-                                                else:
-                                                    #print("FAILED TO SET BUTTON VALUE")
-                                                    pass
+                                            
+                                            if thingy:
+                                                propy = thingy.find_property(short_code)
+                                                if propy:
+                                                    #print("found button short_code property too")
+                                                    if propy.set_cached_value_and_notify(bool(event.value)):
+                                                        #print("OK, button value set")
+                                                        pass
+                                                    else:
+                                                        #print("FAILED TO SET BUTTON VALUE")
+                                                        pass
                             
                                 
                                     #try:
@@ -543,6 +592,14 @@ class ButtonInputAdapter(Adapter):
         except Exception as ex:
             if self.DEBUG:
                 print("Error setting status on thing: " + str(ex))
+        
+        try:
+            for task in asyncio.Task.all_tasks():
+                task.cancel()
+        except Exception as ex:
+            if self.DEBUG:
+                print("caught error cancelling asyncio tasks: " + str(ex))
+            
         
         try:
             self.asyncio_loop.close()
