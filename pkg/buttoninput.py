@@ -17,6 +17,7 @@ import evdev
 #from evdev import InputDevice, categorize, ecodes, list_devices
 
 import asyncio
+import threading
 
 #import datetime
 #import requests  # noqa
@@ -62,11 +63,17 @@ class ButtonInputAdapter(Adapter):
 
         # set up some variables
         self.DEBUG = True
+        self.running = True
+        self.auto_detect_new_devices = True
+        
+        self.input_path = '/dev/input/'
         
         self.inputs = [] # holds the evdev event objects
         self.input_data = {} # holds data that can be sent to the front-end
         
         self.rate_limit = 0.1        
+        
+        self.last_time_rescanned = 0
         
         # There is a very useful variable called "user_profile" that has useful values from the controller.
         #print("self.user_profile: " + str(self.user_profile))
@@ -85,6 +92,8 @@ class ButtonInputAdapter(Adapter):
         #if sys.platform == 'darwin':
         #    print("running on a Mac")
 			
+            
+        self.asyncio_loop = None
 		
         self.devices = {}
             
@@ -126,22 +135,182 @@ class ButtonInputAdapter(Adapter):
         
         
         
-        self.generate_things()
+        #self.generate_things()
         
         #self.asyncio_loop = asyncio.get_event_loop()
         
         #self.asyncio_loop = asyncio.new_event_loop()
         #asyncio.set_event_loop(self.asyncio_loop)
         
-        self.scan_devices()
+        self.asyncio_loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(self.asyncio_loop)
         
+        #self.scan_devices()
+        #print("initial device scan complete")
         #self.asyncio_loop.run_forever()
         
+        
+
+        
+        
+        device_list_before = [] # dict ([(f, None) for f in os.listdir (self.input_path)])
+        if self.DEBUG:
+            print(" device_list_before: ",  device_list_before)
+            print("self.auto_detect_new_devices: ", self.auto_detect_new_devices)
+        
+        
+        self.asyncio_thread = threading.Thread(target=self.run_asyncio_forever) # , args=(self.asyncio_loop,)
+        self.asyncio_thread.daemon = True
+        self.asyncio_thread.start()
+        if self.DEBUG:
+            print("started asyncio thread")
+        
         # The addon is now ready
-        self.ready = True 
+        self.ready = True
+        
+        while self.running:
+        
+            #device_list_now = dict ([(f, None) for f in os.listdir (self.input_path)])
+            device_list_now = [path for path in evdev.list_devices()]
+            # evdev.InputDevice(
+        
+            #print("device_list_now: ", device_list_now)
+        
+            added = [f for f in device_list_now if not f in device_list_before]
+            removed = [f for f in device_list_before if not f in device_list_now]
+        
+            if added or removed:
+                if self.DEBUG:
+                    print("\n\n  ---*   []")
+                    print("CONNECTED DEVICES CHANGED!")
+                    print("device_list_now: ", json.dumps(device_list_now,indent=4))
+                    print("")
+                    print("devices added: ", ", ".join (added))
+                    print("devices removed: ", ", ".join (removed))
+                
+                
+                #time.sleep(1)
+                #self.inputs = [evdev.InputDevice(path) for path in evdev.list_devices()]
+    
+                #if self.DEBUG:
+                #    print("while loop: len(self.inputs): " + str(len(self.inputs)))
+    
+                event_index = 0
+                
+                
+                for device_path in removed:
+                    if str(device_path) in self.input_data.keys():
+                        print("removing disconnected device from self.input_data: ", str(device_path))
+                        del self.input_data[ str(device_path) ]
+                    else:
+                        print("unexpected ERROR: disconnected device path was not already in self.input_data: ", str(device_path))
+                
+                for device_path in added:
+                    if self.DEBUG:
+                        print("")
+                        print(str(event_index) + ". ")
+                
+                
+                    
+                    try:
+                        
+                        device = evdev.InputDevice(device_path)
+                        
+                        if not str(device.path) in self.input_data.keys():
+                            print("adding device to self.input_data: ", str(device.path))
+                            self.input_data[ str(device.path) ] = {}
+                
+                            if self.DEBUG:
+                                print(device.path, device.name, device.phys)
+        
+                            caps = device.capabilities(verbose=True)
+            
+                            clean_caps = {}
+            
+                            for key, value in caps.items():
+                
+                                tuple_dict = list(key)
+                                clean_caps[ tuple_dict[0] ] = {'keycode':tuple_dict[1],'children':{}}
+                
+                                for sub_item in value:
+                                    if 'tuple' in str(type(sub_item)):
+                        
+                                        if 'tuple' in str(type(sub_item[0])):
+                            
+                                            if 'AbsInfo' in str(sub_item):
+                                
+                                                abs_data = list(sub_item)[0]
+                                                abs_details = list(sub_item)[1]._asdict()
+                                                abs_details['keycode'] = int(abs_data[1])
+                                                clean_caps[ tuple_dict[0] ]['children'][ str(abs_data[0]) ] = abs_details
 
+                                            else:
+                                                for alt_name in list(sub_item[0]):
+                                                    clean_caps[ tuple_dict[0] ]['children'][ str(alt_name) ] =  {'keycode':int(list(sub_item)[1])}
+                                        else:
+                                            clean_caps[ tuple_dict[0] ]['children'][ str(list(sub_item)[0]) ] = {'keycode':int(list(sub_item)[1])}
+                        
+                                    else:
+                                        if self.DEBUG:
+                                            print("sub-item was not a tuple?: ", type(sub_item))
 
-
+                
+        
+                            #print("")
+                            #print(device.capabilities(verbose=True))
+                            #print("->->")
+                            #print(json.dumps(clean_caps, indent=4))
+        
+        
+                            self.input_data[ str(device.path) ] = {'index':event_index, 'has_buttons':False, 'input_data':[], 'path':str(device.path), 'nice_name':'buttoninput_' + str(device.name).replace(' ','_'), 'phys': str(device.phys) ,'capabilities': clean_caps ,'capabilities_raw': str(device.capabilities(verbose=False))}
+        
+                            #asyncio.ensure_future(self.print_events(device))
+                            event_loop = asyncio.get_event_loop()
+                            asyncio.run_coroutine_threadsafe(self.print_events(device), event_loop)
+                            print("added new coroutine to asyncio loop")
+                    except Exception as ex:
+                        if self.DEBUG:
+                            print("caught ERROR looping over input events: " + str(ex))
+                
+                        """
+                        if 'There is no current event loop in thread' in str(ex):
+                            if self.DEBUG:
+                                print("atempting to create new event loop")
+                    
+                            try:
+                                self.asyncio_loop = asyncio.new_event_loop()
+                                asyncio.set_event_loop(self.asyncio_loop)
+                    
+                            except Exception as ex:
+                                if self.DEBUG:
+                                    print("double error: failed to create new event loop after catching errot that there is no loop: " + str(ex))
+                        """
+                    
+                    
+            
+                    event_index += 1
+                
+                
+                self.generate_things()
+                
+                #self.scan_devices()
+                
+                #if len(self.inputs):
+                    
+                #self.generate_things()
+                
+            #else:
+            #    print("no change in connected devices: ", device_list_now)
+                
+            device_list_before = list(device_list_now)
+        
+            time.sleep(1)
+        
+            if self.auto_detect_new_devices == False:
+                print("not auto-detecting changes")
+                break
+            
+            
 
     def add_from_config(self):
         """ This retrieves the addon settings from the controller """
@@ -170,9 +339,15 @@ class ButtonInputAdapter(Adapter):
                 self.DEBUG = bool(config['Debugging'])
                 if self.DEBUG:
                     print("Debugging enabled")
-
+                    
             if self.DEBUG:
                 print(str(config)) # Print the entire config data
+                
+            if 'Auto-detect connections' in config:
+                self.auto_detect_new_devices = bool(config['Auto-detect connections'])
+                if self.DEBUG:
+                    print("self.auto_detect_new_devices is now: " + str(self.auto_detect_new_devices))
+                
                 
             #if 'A boolean setting' in config:
             #    self.persistent_data['a_boolean_setting'] = bool(config['A boolean setting']) # sometime you may want the addon settings to override the persistent value
@@ -200,24 +375,78 @@ class ButtonInputAdapter(Adapter):
                 print("DEBUG: in generate_things")
             
             if 'things' in self.persistent_data:
+                
+                # delete all things first
+                
+                for nice_name in self.devices.keys():
+                    print("generate things: old device name: ", nice_name)
+                    self.devices[nice_name].connected = False
+                    self.devices[nice_name].connected_notify(True)
+                    
+                self.devices = {}
+                
                 for nice_name, props in self.persistent_data['things'].items():
                 
-                    # Create the device object
-                    self.devices[nice_name] = ButtonInputDevice(self,nice_name,props)
+                    try:
+                        # Create the device object
+                        #if nice_name in self.devices[nice_name]:
+                        #    del self.devices[nice_name]
+                    
+                        self.devices[nice_name] = ButtonInputDevice(self,nice_name,props)
             
-                    # Tell the controller about the new device that was created. This will add the new device to self.devices too
-                    self.handle_device_added(self.devices[nice_name])
+                        # Tell the controller about the new device that was created. This will add the new device to self.devices too
+                        self.handle_device_added(self.devices[nice_name])
             
-                    if self.DEBUG:
-                        print("DEBUG: buttoninput_device created: " + str(nice_name))
+                        if self.DEBUG:
+                            print("DEBUG: buttoninput_device created: " + str(nice_name))
                 
-                    self.devices[nice_name].connected = True
-                    self.devices[nice_name].connected_notify(True)
+                        self.devices[nice_name].connected = True
+                        self.devices[nice_name].connected_notify(True)
+                    
+                    except Exception as ex:
+                        if self.DEBUG:
+                            print("caught error while generating a thing in generate_things: " + str(ex))
+
 
         except Exception as ex:
             if self.DEBUG:
                 print("caught error in generate_things: " + str(ex))
             
+
+
+
+    def run_asyncio_forever(self):
+        print("in run_asyncio_forever")
+        while self.running:
+            time.sleep(0.5)
+                
+            
+            if self.running:
+                if self.asyncio_loop == None:
+                    print("run_asyncio_forever: creating asyncio loop")
+                    self.asyncio_loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(self.asyncio_loop)
+            
+                if self.asyncio_loop:
+                    print("starting asyncio loop")
+                    #self.asyncio_loop.run_forever()
+                    try:
+                        self.asyncio_loop.run_forever()
+                    except Exception as ex:
+                        print("un_asyncio_forever: caught error in run_forever: ", ex)
+                    finally:
+                        print("run_asyncio_forever: finally: asyncio loop exited")
+                        self.asyncio_loop.run_until_complete(loop.shutdown_asyncgens())
+                        self.asyncio_loop.close()
+                    
+                    #run_until_complete(task)
+                    print("run_asyncio_forever: Asyncio loop stopped!")
+                else:
+                    print("run_asyncio_forever: not starting asyncio loop!")
+            
+            #time.sleep(0.5)
+        
+
 
 
 
@@ -228,30 +457,58 @@ class ButtonInputAdapter(Adapter):
 
 
     def scan_devices(self):
-        
+        print("\n0_0_0_0_\nin scan_devices")
         #scan_devices_response = run_command('ls -l /dev/input/event*')
         #print("raw scan_devices_response: " + str(scan_devices_response))
         
+        
+        print("BLOCKED")
+        return
+        
+        
+        if self.last_time_rescanned > (time.time() - 1):
+            if self.DEBUG:
+                print("not running scan_devices again, as it was very recently run")
+            return
+        
+        evdev_devices_list = evdev.list_devices()
+        if self.DEBUG:
+            print("evdev_devices_list: ", json.dumps(evdev_devices_list,indent=4))
+            print("")
         self.inputs = []
         self.input_data = {}
         
         try:
             if self.asyncio_loop:
-                
-                for task in asyncio.Task.all_tasks():
-                    task.cancel()
+                try:
+                   # for task in asyncio.Task.all_tasks():
+                    for task in asyncio.all_tasks():
+                        print("cancelling asyncio task")
+                        task.cancel()
+                except Exception as ex:
+                    print("scan_devices: failed to stop asyncio tasks first: ", ex)
                     
-                self.asyncio_loop.stop()
-                print("scan_devices: closed old loop")
+                print('scan_devices: stopping asyncio loop')
+                try:
+                    self.asyncio_loop.stop()
+                    print("scan_devices: closed old loop")
+                except Exception as ex:
+                    if self.DEBUG:
+                        print("scan_devices: failed to stop loop: " + str(ex))
+                        
+                
+                self.asyncio_loop = None
                     
         except Exception as ex:
             if self.DEBUG:
-                print("caught error cancelling asyncio tasks: " + str(ex))
-        
-        self.asyncio_loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(self.asyncio_loop)
+                print("caught error stopping asyncio loop: " + str(ex))
         
         
+        
+        if self.asyncio_loop == None:
+            print("scan_devices: creating asyncio loop")
+            self.asyncio_loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(self.asyncio_loop)
         
         
         self.inputs = [evdev.InputDevice(path) for path in evdev.list_devices()]
@@ -340,13 +597,29 @@ class ButtonInputAdapter(Adapter):
             event_index += 1
         
         if len(self.inputs):
-            self.asyncio_loop.run_forever()
+            self.generate_things()
+            
+            
+            
+            #self.asyncio_loop.run_forever()
+        
+        
         
         return
         
             
+   
+        
+
+    
+    
+            
          
     async def print_events(self,device):
+        #print("in print_events. device: ", device)
+        #print("device dir: ", dir(device))
+        
+        
         try:
             async for event in device.async_read_loop():
                 
@@ -572,9 +845,48 @@ class ButtonInputAdapter(Adapter):
         except Exception as ex:
             if self.DEBUG:
                 print("caught error in print_events: " + str(ex))
- 
- 
- 
+                
+            try:
+                if 'No such device' in str(ex) and str(device.path) in self.input_data.keys():
+                    
+                    print("device disconnected: ", str(self.input_data[device.path]['nice_name']))
+                    thingy = self.get_device(str(self.input_data[device.path]['nice_name']))
+                    #print("button thingy: ", thingy)
+        
+                    #properties_dict = thingy.get_property_descriptions()
+                    #print("button properties_dict: ", properties_dict)
+                    #print("button short_code: ", short_code)
+                
+                    if thingy:
+                        print("setting thing to disconnected")
+                        thingy.connected = False
+                        thingy.connected_notify(True)
+                
+                    del self.input_data[ str(device.path) ]
+                    
+            except Exception as ex:
+                print("caught error trying to remove device from self.input_data dict: ", ex)
+            
+            try:
+                device.close()
+            except Exception as ex:
+                print("caught error trying to close evdev device: ", ex)
+            
+            
+            """
+            if 'No such device' in str(ex):
+                
+                try:
+                    
+                    if device.async_read_loop:
+                        device.async_read_loop.close()
+                    
+                    await asyncio.sleep(1)
+                    self.scan_devices()
+                        
+                except Exception as ex:
+                    print("caught error trying to handle removed device: ", ex)
+            """
         
 
     def unload(self):
@@ -582,6 +894,12 @@ class ButtonInputAdapter(Adapter):
         if self.DEBUG:
             print("Unloading ButtonInput addon")
             
+        self.running = False
+        
+        #for nice_name in self.devices.keys():
+        #    print("unload: setting old devices to disconnected: ", nice_name)
+        #    self.devices[nice_name].connected = False
+        #    self.devices[nice_name].connected_notify(False)
         
         # A final chance to save the data.
         self.save_persistent_data()
@@ -591,7 +909,7 @@ class ButtonInputAdapter(Adapter):
                 self.devices[thing].connected_notify(False)
         except Exception as ex:
             if self.DEBUG:
-                print("Error setting status on thing: " + str(ex))
+                print("unload: error setting things to disconnected: " + str(ex))
         
         try:
             for task in asyncio.Task.all_tasks():
@@ -600,7 +918,6 @@ class ButtonInputAdapter(Adapter):
             if self.DEBUG:
                 print("caught error cancelling asyncio tasks: " + str(ex))
             
-        
         try:
             self.asyncio_loop.close()
         except Exception as ex:
