@@ -26,11 +26,16 @@
   "name": "buttoninput",
   "options": {
     "default": {
+	  "Auto-detect connections": true,
       "Update frequency": 90,
       "Debugging": false
     },
     "schema": {
       "properties": {
+        "Auto-detect connections": {
+          "description": "Automatically detect when a device is plugged in or unplugged? The default is to enable this.",
+          "type": "boolean"
+        },
         "Update frequency": {
           "description": "Some devices send a lot of updates, for example about a controller's Y and Y position. To avoid overwhelming the system, it's possible to limit the frequency with which updates are accepted. You can very this between 0 (slow, once very second) to 100 (no limitation, instant). 50 would be once every half a second.  The default speed is 90, which gives a maximum rate of 0.1 seconds. Note that button presses are never rate limited, and will always work instantly.",
           "type": "integer",
@@ -47,7 +52,7 @@
     }
   },
   "short_name": "buttoninput",
-  "version": "0.0.13",
+  "version": "0.1.0",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
