@@ -48,6 +48,7 @@ echo "Python3 version after install:"
 python3 --version
 ls /usr/bin/python*
 
+
 update-alternatives --install /usr/bin/python python /usr/bin/python3.11 2
 
 echo "Python3 version after install and update-alternatives:"
