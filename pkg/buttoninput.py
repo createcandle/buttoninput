@@ -189,12 +189,12 @@ class ButtonInputAdapter(Adapter):
                     print("devices added: ", ", ".join (added))
                     print("devices removed: ", ", ".join (removed))
                 
-                if self.first_run == False:
-                    if added:
-                        self.send_pairing_prompt("A button input device connected")
+                    if self.first_run == False:
+                        if added:
+                            self.send_pairing_prompt("A button input device connected")
                 
-                    elif removed:
-                        self.send_pairing_prompt("A button input device disconnected")
+                        elif removed:
+                            self.send_pairing_prompt("A button input device disconnected")
                 
                 self.first_run = False
                 
