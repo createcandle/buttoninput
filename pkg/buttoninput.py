@@ -153,7 +153,7 @@ class ButtonInputAdapter(Adapter):
 
         
         
-        device_list_before = [] # dict ([(f, None) for f in os.listdir (self.input_path)])
+        device_list_before = [] 
         if self.DEBUG:
             print(" device_list_before: ",  device_list_before)
             print("self.auto_detect_new_devices: ", self.auto_detect_new_devices)
@@ -168,6 +168,7 @@ class ButtonInputAdapter(Adapter):
         # The addon is now ready
         self.ready = True
         
+        self.first_run = True
         while self.running:
         
             #device_list_now = dict ([(f, None) for f in os.listdir (self.input_path)])
@@ -188,6 +189,14 @@ class ButtonInputAdapter(Adapter):
                     print("devices added: ", ", ".join (added))
                     print("devices removed: ", ", ".join (removed))
                 
+                if self.first_run == False:
+                    if added:
+                        self.send_pairing_prompt("A button input device connected")
+                
+                    elif removed:
+                        self.send_pairing_prompt("A button input device disconnected")
+                
+                self.first_run = False
                 
                 #time.sleep(1)
                 #self.inputs = [evdev.InputDevice(path) for path in evdev.list_devices()]
@@ -208,7 +217,7 @@ class ButtonInputAdapter(Adapter):
                 for device_path in added:
                     if self.DEBUG:
                         print("")
-                        print(str(event_index) + ". ")
+                        print("ADDED DEVICE: " + str(event_index) + ". ")
                 
                 
                     
@@ -216,8 +225,10 @@ class ButtonInputAdapter(Adapter):
                         
                         device = evdev.InputDevice(device_path)
                         
-                        if not str(device.path) in self.input_data.keys():
-                            print("adding device to self.input_data: ", str(device.path))
+                        
+                        if device and str(device.path) not in self.input_data.keys():
+                            if self.DEBUG:
+                                print("adding device to self.input_data: ", str(device.path))
                             self.input_data[ str(device.path) ] = {}
                 
                             if self.DEBUG:
@@ -267,7 +278,9 @@ class ButtonInputAdapter(Adapter):
                             #asyncio.ensure_future(self.print_events(device))
                             event_loop = asyncio.get_event_loop()
                             asyncio.run_coroutine_threadsafe(self.print_events(device), event_loop)
-                            print("added new coroutine to asyncio loop")
+                            if self.DEBUG:
+                                print("added new coroutine to asyncio loop")
+                                
                     except Exception as ex:
                         if self.DEBUG:
                             print("caught ERROR looping over input events: " + str(ex))
@@ -307,7 +320,8 @@ class ButtonInputAdapter(Adapter):
             time.sleep(1)
         
             if self.auto_detect_new_devices == False:
-                print("not auto-detecting changes")
+                if self.DEBUG:
+                    print("not auto-detecting changes")
                 break
             
             
@@ -416,33 +430,40 @@ class ButtonInputAdapter(Adapter):
 
 
     def run_asyncio_forever(self):
-        print("in run_asyncio_forever")
+        if self.DEBUG:
+            print("in run_asyncio_forever")
         while self.running:
             time.sleep(0.5)
                 
             
             if self.running:
                 if self.asyncio_loop == None:
-                    print("run_asyncio_forever: creating asyncio loop")
+                    if self.DEBUG:
+                        print("run_asyncio_forever: creating asyncio loop")
                     self.asyncio_loop = asyncio.new_event_loop()
                     asyncio.set_event_loop(self.asyncio_loop)
             
                 if self.asyncio_loop:
-                    print("starting asyncio loop")
+                    if self.DEBUG:
+                        print("starting asyncio loop")
                     #self.asyncio_loop.run_forever()
                     try:
                         self.asyncio_loop.run_forever()
                     except Exception as ex:
-                        print("un_asyncio_forever: caught error in run_forever: ", ex)
+                        if self.DEBUG:
+                            print("un_asyncio_forever: caught error in run_forever: ", ex)
                     finally:
-                        print("run_asyncio_forever: finally: asyncio loop exited")
+                        if self.DEBUG:
+                            print("run_asyncio_forever: finally: asyncio loop exited")
                         self.asyncio_loop.run_until_complete(loop.shutdown_asyncgens())
                         self.asyncio_loop.close()
                     
                     #run_until_complete(task)
-                    print("run_asyncio_forever: Asyncio loop stopped!")
+                    if self.DEBUG:
+                        print("run_asyncio_forever: Asyncio loop stopped!")
                 else:
-                    print("run_asyncio_forever: not starting asyncio loop!")
+                    if self.DEBUG:
+                        print("run_asyncio_forever: not starting asyncio loop!")
             
             #time.sleep(0.5)
         
@@ -457,12 +478,14 @@ class ButtonInputAdapter(Adapter):
 
 
     def scan_devices(self):
-        print("\n0_0_0_0_\nin scan_devices")
+        if self.DEBUG:
+            print("\n0_0_0_0_\nin scan_devices")
         #scan_devices_response = run_command('ls -l /dev/input/event*')
         #print("raw scan_devices_response: " + str(scan_devices_response))
         
         
-        print("BLOCKED")
+        if self.DEBUG:
+            print("scan_devices is BLOCKED")
         return
         
         
@@ -488,10 +511,12 @@ class ButtonInputAdapter(Adapter):
                 except Exception as ex:
                     print("scan_devices: failed to stop asyncio tasks first: ", ex)
                     
-                print('scan_devices: stopping asyncio loop')
+                if self.DEBUG:
+                    print('scan_devices: stopping asyncio loop')
                 try:
                     self.asyncio_loop.stop()
-                    print("scan_devices: closed old loop")
+                    if self.DEBUG:
+                        print("scan_devices: closed old loop")
                 except Exception as ex:
                     if self.DEBUG:
                         print("scan_devices: failed to stop loop: " + str(ex))
@@ -506,7 +531,8 @@ class ButtonInputAdapter(Adapter):
         
         
         if self.asyncio_loop == None:
-            print("scan_devices: creating asyncio loop")
+            if self.DEBUG:
+                print("scan_devices: creating asyncio loop")
             self.asyncio_loop = asyncio.new_event_loop()
             asyncio.set_event_loop(self.asyncio_loop)
         
@@ -632,7 +658,17 @@ class ButtonInputAdapter(Adapter):
                         print("ERROR, device path not in self.input_data: " + str(device.path))
                 
                 #if event.type == ecodes.EV_KEY:
-               #     print("detected a key press")
+               #
+               
+                
+                
+                if 'nice_name' not in self.input_data[device.path]:
+                    if self.DEBUG:
+                        print("ERROR, device has no NiceName")
+                    return
+                
+                if self.DEBUG:
+                    print("detected a key press")
                 
             
                 if event_category.startswith('synchronization event'):
@@ -800,8 +836,9 @@ class ButtonInputAdapter(Adapter):
                                         #print("button short_code: " + str(short_code))
                                         #print("button short_code_detail: " + str(short_code_detail))
                         
-                                        if 'children' in self.input_data[device.path]['capabilities']['EV_KEY'] and short_code in self.input_data[device.path]['capabilities']['EV_KEY']['children']:
-                                            #print("found button short_code in capabilities: ", short_code)
+                                        if 'children' in self.input_data[device.path]['capabilities']['EV_KEY'] and short_code in self.input_data[device.path]['capabilities']['EV_KEY']['children'] and 'nice_name' in self.input_data[device.path]:
+                                            if self.DEBUG:
+                                                print("found button short_code in capabilities: ", short_code)
                             
                                             self.input_data[device.path]['capabilities']['EV_KEY']['children'][short_code]['last_time'] = int(event.sec)
                                     
@@ -819,6 +856,8 @@ class ButtonInputAdapter(Adapter):
                                             #print("button short_code: ", short_code)
                                             
                                             if thingy:
+                                                if self.DEBUG:
+                                                    print("Found the matching thing for the button press, based on device NiceName: " + str(self.input_data[device.path]['nice_name']));
                                                 propy = thingy.find_property(short_code)
                                                 if propy:
                                                     #print("found button short_code property too")
@@ -828,7 +867,9 @@ class ButtonInputAdapter(Adapter):
                                                     else:
                                                         #print("FAILED TO SET BUTTON VALUE")
                                                         pass
-                            
+                                            else:
+                                                if self.DEBUG:
+                                                    print("button press, but no thing found for device NiceName: " + str(self.input_data[device.path]['nice_name']));
                                 
                                     #try:
                                     #    self.devices[ str(self.input_data[device.path]['nice_name']) ].get_props()[short_code].update(bool(event.value)   
@@ -849,7 +890,8 @@ class ButtonInputAdapter(Adapter):
             try:
                 if 'No such device' in str(ex) and str(device.path) in self.input_data.keys():
                     
-                    print("device disconnected: ", str(self.input_data[device.path]['nice_name']))
+                    if self.DEBUG:
+                        print("device disconnected: ", str(self.input_data[device.path]['nice_name']))
                     thingy = self.get_device(str(self.input_data[device.path]['nice_name']))
                     #print("button thingy: ", thingy)
         
@@ -858,19 +900,22 @@ class ButtonInputAdapter(Adapter):
                     #print("button short_code: ", short_code)
                 
                     if thingy:
-                        print("setting thing to disconnected")
+                        if self.DEBUG:
+                            print("setting thing to disconnected")
                         thingy.connected = False
                         thingy.connected_notify(True)
                 
                     del self.input_data[ str(device.path) ]
                     
             except Exception as ex:
-                print("caught error trying to remove device from self.input_data dict: ", ex)
+                if self.DEBUG:
+                    print("caught error trying to remove device from self.input_data dict: ", ex)
             
             try:
                 device.close()
             except Exception as ex:
-                print("caught error trying to close evdev device: ", ex)
+                if self.DEBUG:
+                    print("caught error trying to close evdev device: ", ex)
             
             
             """

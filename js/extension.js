@@ -406,6 +406,8 @@
 		if(overview_el){
 			overview_el.innerHTML = '';
 			
+			let scrolled_into_view = false;
+			
 			for (let [key, value] of Object.entries(input_data)){
 				
 				/*
@@ -570,7 +572,7 @@
 					
 					if(typeof this.persistent_data == 'object' && this.persistent_data != null && typeof this.persistent_data['things'] != 'undefined' && typeof this.persistent_data['things'][nice_name] != 'undefined' && typeof this.persistent_data['things'][nice_name][node_name] != 'undefined'){
 						
-						console.warn("button enabled state already exists in persistent data: ", this.persistent_data['things'][nice_name][node_name]);
+						//console.warn("button enabled state already exists in persistent data: ", this.persistent_data['things'][nice_name][node_name]);
 						
 						if(typeof this.persistent_data['things'][nice_name][node_name]['enabled'] == 'boolean' && this.persistent_data['things'][nice_name][node_name]['enabled'] == true){
 							li_title_el.classList.add('extension-buttoninput-overview-selected');
@@ -590,6 +592,8 @@
 						
 				        li.appendChild(ul);
 						
+						
+						
 				        for (var i=0; i < Object.keys(node).length; i++) {
 							const key_name = Object.keys(node)[i];
 							//console.log("node key_name: ", key_name);
@@ -599,9 +603,21 @@
 								
 								let seconds_ago = Math.floor(now_stamp - node[key_name])
 								
+								if(scrolled_into_view == false && node[key_name] > now_stamp - 2){
+									//console.log("ACtuALLy NOW PRESSED!: ", node_name);
+									scrolled_into_view = true;
+									setTimeout(() => {
+										console.log("scrolling li item into view: ", li);
+										li.scrollIntoView(true);
+									}, 50);
+									
+								}
+								
+								
 								if(node[key_name] > now_stamp - 5){
 									//console.log("NOW PRESSED!: ", node_name);
 									li.classList.add('extension-buttoninput-overview-now');
+									
 								}
 								else if(node[key_name] > now_stamp - 10){
 									//console.log("RECENTLY PRESSED!: ", node_name);
