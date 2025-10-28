@@ -14,96 +14,9 @@
             <p>If you don't have the Candle App Store, go to <a href="/settings/developer">Settings -> Developer</a> and then Create Local Authorization. Generate a key there by clicking on Allow at the bottom of the page. Copy the token that's generated, and then visit the settings page for this addon. There you can paste in the code, and click Apply to save it.</p>
         </div>
 		
-		<!--
-        <div id="extension-buttoninput-list">
-            <div id="extension-buttoninput-list-explanation">
-                <div style="padding: 2rem; background-color: rgba(0,0,0,.1); border-radius: 0.5rem;">
-                    <h3>How it works</h3>
-                    <p>Button Input allows you to have the value of one property 'follow' the value of another.</p>
-                    <p>For example, you could have a light's brightness follow the volume of the radio.</p>
-                    <p>&nbsp;</p>
-                    <img src="/extensions/buttoninput/images/buttoninput-example.png" alt="buttoninput example" style="width:100%;border-radius:.5rem"/>
-                    <p style="text-align:center;font-style:italic; opacity:.8">The louder the radio, the brighter the light (example)</p>
-                </div>
-            </div>
-        </div>
-		-->
+		
         
         
-        <div id="extension-buttoninput-original-item" class="extension-buttoninput-item">
-            
-            <div class="extension-buttoninput-item-sentence">
-                <div class="extension-buttoninput-item-sentence-part">
-                    <span>
-                        <input type="number" step="0.001" class="extension-buttoninput-limit extension-buttoninput-limit1" name="extension-buttoninput-limit1" value="0">
-                        to 
-                        <input type="number" step="0.001" class="extension-buttoninput-limit extension-buttoninput-limit2" name="extension-buttoninput-limit2" value="100">
-                        of 
-                    </span>
-                    <span class="extension-buttoninput-leader">
-                        <select class="extension-buttoninput-thing1 extension-buttoninput-dropdown">
-                            <option value=""></option>
-                        </select><select class="extension-buttoninput-property1 extension-buttoninput-dropdown">
-                            <option value=""></option>
-                        </select>
-                    </span>
-                </div>
-                
-                <div class="extension-buttoninput-item-sentence-part extension-buttoninput-item-sentence-part-inter">
-                    should translate to values between
-                </div>
-                
-                <div class="extension-buttoninput-item-sentence-part">
-                    <span>
-                        <input type="number" step="0.001" class="extension-buttoninput-limit extension-buttoninput-limit3" name="extension-buttoninput-limit3" value="0"> 
-                        to 
-                        <input type="number" step="0.001" class="extension-buttoninput-limit extension-buttoninput-limit4" name="extension-buttoninput-limit4" value="100"> 
-                        of 
-                    </span>
-                    <span class="extension-buttoninput-follower">
-                        <select class="extension-buttoninput-thing2 extension-buttoninput-dropdown">
-                            <option value=""></option>
-                        </select><select class="extension-buttoninput-property2 extension-buttoninput-dropdown">
-                            <option value=""></option>
-                        </select>
-                    </span>
-                </div>
-                
-                <div class="extension-buttoninput-item-sentence-part extension-buttoninput-item-sentence-part-inter">
-                    every <select class="extension-buttoninput-speed extension-buttoninput-dropdown">
-                            <option value="7">minute</option>
-                            <option value="2">10 seconds</option>
-                            <option value="0">second</option>
-                            
-                            
-                        </select>
-                </div>
-            </div>
-            
-            <div class="extension-buttoninput-item-menu">
-                <div class="extension-buttoninput-item-left">
-                    <form class="rule-switch switch">
-                        <input type="checkbox" id="extension-buttoninput-toggle-checkbox" class="switch-checkbox extension-buttoninput-enabled">
-                        <label class="switch-slider" for="extension-buttoninput-toggle-label">
-                        </label>
-                    </form>
-                </div>
-
-                <div class="extension-buttoninput-item-right">
-
-                    <div class="extension-buttoninput-item-delete-button">&nbsp;</div>
-                </div>
-            </div>
-        
-            <div class="rule-edit-overlay delete">
-                <div class="rule-delete-dialog">
-                    <p>Are you sure you want to remove this follower permanently?</p>
-                    <input class="rule-delete-cancel-button" type="button" data-l10n-id="rule-delete-cancel-button" value="Cancel">
-                    <input class="rule-delete-confirm-button" type="button" value="Remove">
-                </div>
-            </div>
-            
-        </div>
 
 		
 		<div id="extension-buttoninput-overview-error" style="display:none"><h2>An error occured</h2></div>
@@ -120,6 +33,12 @@
             <p>Get the latest button presses data</p>
 			<button id="extension-buttoninput-update-button"  class="text-button">Update</button>
         </div>
+
+        <div id="extension-buttoninput-show-all-button-container">
+            <p>Show all potential buttons</p>
+			<button id="extension-buttoninput-show-all-button" class="text-button">Show all</button>
+        </div>
+
 
 
         <br/>

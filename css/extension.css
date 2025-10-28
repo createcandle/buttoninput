@@ -400,12 +400,11 @@ body:not(.developer) .extension-buttoninput-show-if-developer{
 }
 
 
-
+#extension-buttoninput-content.extension-buttoninput-show-all #extension-buttoninput-show-all-button-container,
 #extension-buttoninput-content:not(.extension-buttoninput-show-all) h4:not(.extension-buttoninput-overview-selected),
 #extension-buttoninput-content:not(.extension-buttoninput-show-all) h4:not(.extension-buttoninput-overview-selected) + ul{
 	display:none;
 }
-
 
 
 .extension-buttoninput-overview-latching-container{
@@ -432,6 +431,7 @@ body:not(.developer) .extension-buttoninput-show-if-developer{
   height: 25px;
   background: #5d9bc7;
   cursor: pointer;
+  border-radius:.5rem;
 }
 
 .extension-buttoninput-overview-latching-container input::-moz-range-thumb {
@@ -439,6 +439,7 @@ body:not(.developer) .extension-buttoninput-show-if-developer{
   height: 25px;
   background: #5d9bc7;
   cursor: pointer;
+  border-radius:.5rem;
 }
 
 .extension-buttoninput-overview-latching-value{

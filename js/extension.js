@@ -57,7 +57,7 @@
 					this.update_countdown = 0;
 					this.add_button.innerHTML = '';
 					if(content_el){
-						content_el.classList.remove('extension-buttoninput-busy-scanning')
+						content_el.classList.remove('extension-buttoninput-busy-scanning');
 					}
 					
 				}
@@ -65,7 +65,8 @@
 					this.update_countdown = 40;
 					this.add_button.innerHTML = this.update_countdown;
 					if(content_el){
-						content_el.classList.add('extension-buttoninput-busy-scanning')
+						content_el.classList.add('extension-buttoninput-busy-scanning');
+						content_el.classList.add('extension-buttoninput-show-all');
 					}
 	    	  		this.get_input_data();
 				}
@@ -340,6 +341,17 @@
 		}
 
 
+
+
+		let show_all_button_el = document.getElementById('extension-buttoninput-show-all-button');
+		if(show_all_button_el && content_el){
+			show_all_button_el.addEventListener('click', () => {
+    	  		content_el.classList.add('extension-buttoninput-show-all');
+			})
+		}
+		else{
+			console.error("no rescan button found");
+		}
 		
 		/*
 		let update_button_el = document.getElementById('extension-buttoninput-update-button');
