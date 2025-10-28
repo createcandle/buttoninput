@@ -17,6 +17,7 @@
 		this.persistent_data = null;
 		
 		this.update_countdown = 0;
+		this.received_poll = true;
 		
 		this.jwt = localStorage.getItem('jwt');
 		
@@ -71,6 +72,35 @@
 					
 			})
 		}
+		
+		content_el.poller = setTimeout(() => {
+			if(this.update_countdown == 0){
+				if(this.received_poll){
+					this.received_poll = false;
+	    	        window.API.postJson(
+	    	          `/extensions/${this.id}/api/ajax`,
+	                    {	'action':'poll'
+						}
+
+	    	        ).then((body) => {
+						this.received_poll = true;
+						if(typeof body.input_data != 'undefined'){
+							console.log("buttoninput: poll: received updated device data: ", body.input_data);
+							this.handle_input_data(body.input_data);
+						}
+					
+	    	        }).catch((err) => {
+	    	          	console.error("buttoninput: caught error doing poll: ", err);
+						this.received_poll = true;
+	    	        });	
+						
+						
+				}
+				
+			}
+			
+			
+		},3000);
 		
 		
 		/*
@@ -406,7 +436,45 @@
 		if(overview_el){
 			overview_el.innerHTML = '';
 			
+			const save_button_el = document.getElementById('extension-buttoninput-save-button');
+			
 			let scrolled_into_view = false;
+			
+			function generate_explanation(details){
+				//console.log("in generate_explanation. details: ", details);
+				let explanation = '';
+				if(details && typeof details['latching'] == 'number'){
+					
+					if(details['latching'] > 1){
+						explanation = 'Each time you press this button, it will increase a value until it reaches ' + details['latching'] + ".";
+						
+						if(typeof details['opposite'] == 'string'){
+							explanation += ' Pressing the "' + details['opposite'].replace('KEY_','') + '" button will decrease that value, until it reaches zero.'
+						}
+						else{
+							explanation += " If you then press it again, it will loop back to zero."
+						}
+						
+					}
+					else if(details['latching'] == 1){
+						if(typeof details['opposite'] == 'string'){
+							explanation = " Pressing this button will switch this property on, and pressing the negative opposite button will toggle it off."
+						}
+						else{
+							explanation = " Pressing this button will switch this property on, and pressing it again will turn it off again."
+						}
+					}
+					
+					//if(explanation == ''){
+					//	explanation = 'A normal button';
+					//}
+				}
+				else{
+					//console.warn("generate_explanation: no latching value in provided details: ", details);
+				}
+				return explanation;
+			}
+			
 			
 			for (let [key, value] of Object.entries(input_data)){
 				
@@ -427,6 +495,8 @@
 				const nice_name = value.nice_name;
 				//console.log("nice_name: ", nice_name);
 				
+				let opposite_dropdown_list = [];
+				
 				const process_tree = (node_name, node, element,depth=1) => {
 					//console.log("in process_tree.  node_name, node: ", node_name, node);
 					//console.log("root key: ", key);
@@ -435,6 +505,13 @@
 					const li_title_el = document.createElement('h' + depth);
 					
 					const li_title_span_el = document.createElement('span');
+					
+					let latch_explanation_container_el = document.createElement('li');
+					latch_explanation_container_el.classList.add('extension-buttoninput-overview-explanation');
+					//let latch_explanation_part1 = document.createElement('span');
+					//let latch_explanation_part2 = document.createElement('span');
+					
+					
 					
 					let display_name = node_name.replace('buttoninput','').replaceAll('_',' ');
 					
@@ -491,6 +568,14 @@
 				    li_title_span_el.textContent = display_name;
 					li_title_el.appendChild(li_title_span_el);
 					
+					
+					if(depth == 3){
+						opposite_dropdown_list = Object.keys(node);
+						console.log("opposite_dropdown_list is now: ", opposite_dropdown_list);
+					}
+					
+					
+					
 					if(depth == 4){
 						li_title_el.addEventListener('click', () => {
 							//console.log("clicked on overview item.  node_name: ", node_name, node);
@@ -520,6 +605,7 @@
 								this.persistent_data['things'][nice_name][node_name]['enabled'] = true;
 							}
 							
+							
 							if(li_title_el.classList.contains('extension-buttoninput-overview-selected')){
 								li_title_el.classList.remove('extension-buttoninput-overview-selected');
 								this.persistent_data['things'][nice_name][node_name]['enabled'] = false;
@@ -539,13 +625,18 @@
 								
 							}
 							
-							const save_button_el = document.getElementById('extension-buttoninput-save-button');
+							
 							if(save_button_el){
 								save_button_el.style.display = 'block';
 							}
 							
 						})
 					}
+					
+					
+					
+					
+					
 					
 					
 					
@@ -570,6 +661,10 @@
 					li_title_el.classList.add('extension-buttoninput-overview-' + node_name.toLowerCase().replace(/\W/g, ''));
 					
 					
+					
+					
+					
+					
 					if(typeof this.persistent_data == 'object' && this.persistent_data != null && typeof this.persistent_data['things'] != 'undefined' && typeof this.persistent_data['things'][nice_name] != 'undefined' && typeof this.persistent_data['things'][nice_name][node_name] != 'undefined'){
 						
 						//console.warn("button enabled state already exists in persistent data: ", this.persistent_data['things'][nice_name][node_name]);
@@ -583,12 +678,187 @@
 					
 					li.appendChild(li_title_el);
 					
+					
+					
+					
 					li.classList.add('extension-buttoninput-overview-' + node_name.toLowerCase().replace(/\W/g, ''));
 				    element.appendChild(li);
+					
+					
+					
+					
+					
+					
 				    if (Object.keys(node).length) {
 						depth++;
 				        var ul = document.createElement('ul');
 						ul.classList.add('extension-buttoninput-overview-depth' + depth);
+						
+						// Also add a range slider so the user can force the button to act as a momentary latch with X states to toggle through
+						//if(node_name.toLowerCase() == 'keycode'){
+						if(depth == 5){
+							//console.log("creating latching slider");
+							let latch_container_el = document.createElement('li');
+							latch_container_el.classList.add('extension-buttoninput-overview-latching-container');
+						
+							const maximum_latches = 20;
+							
+							
+							
+						
+							let latch_value_el = document.createElement('div');
+							latch_value_el.classList.add('extension-buttoninput-overview-latching-value');
+						
+							let latch_input_el = document.createElement('input');
+							latch_input_el.setAttribute('type','range');
+							latch_input_el.setAttribute('min',0);
+							latch_input_el.setAttribute('max',maximum_latches);
+							latch_input_el.setAttribute('placeholder','0');
+						
+							if(typeof this.persistent_data == 'object' && this.persistent_data != null && typeof this.persistent_data['things'] != 'undefined' && typeof this.persistent_data['things'][nice_name] != 'undefined' && typeof this.persistent_data['things'][nice_name][node_name] != 'undefined' && typeof this.persistent_data['things'][nice_name][node_name]['latching'] == 'number' && this.persistent_data['things'][nice_name][node_name]['latching'] > 0 && this.persistent_data['things'][nice_name][node_name]['latching'] <= maximum_latches){
+								latch_input_el.setAttribute('value', this.persistent_data['things'][nice_name][node_name]['latching']);
+								latch_value_el.textContent = this.persistent_data['things'][nice_name][node_name]['latching'];
+								ul.classList.add('extension-buttoninput-overview-latching-show-opposite-selector');
+							}
+							else{
+								latch_input_el.setAttribute('value',0);
+								latch_value_el.textContent = '0';
+							}
+						
+							latch_input_el.addEventListener('change', () => {
+								//console.log("latching range slider was moved to: ", latch_input_el.value);
+								//console.log("- nice_name and node_name: ", nice_name, node_name);
+							
+								latch_value_el.textContent = latch_input_el.value;
+							
+								if(typeof this.persistent_data['things'] == 'undefined'){
+									this.persistent_data['things'] = {};
+								}
+							
+								if(typeof this.persistent_data['things'][nice_name] == 'undefined'){
+									this.persistent_data['things'][nice_name] = {};
+								}
+							
+								if(typeof this.persistent_data['things'][nice_name][node_name] == 'undefined'){
+									this.persistent_data['things'][nice_name][node_name] = {'enabled':true};
+								}
+							
+								if(typeof this.persistent_data['things'][nice_name] != 'undefined' && typeof this.persistent_data['things'][nice_name][node_name] != 'undefined'){
+									this.persistent_data['things'][nice_name][node_name]['latching'] = parseInt(latch_input_el.value);
+									this.persistent_data['things'][nice_name][node_name]['latched'] = 0;
+									
+									if(this.persistent_data['things'][nice_name][node_name]['latching'] > 0){
+										ul.classList.add('extension-buttoninput-overview-latching-show-opposite-selector');
+									}
+									else{
+										ul.classList.remove('extension-buttoninput-overview-latching-show-opposite-selector');
+									}
+									
+									if(latch_explanation_container_el){
+										latch_explanation_container_el.textContent = generate_explanation(this.persistent_data['things'][nice_name][node_name]);
+									}
+									
+									if(save_button_el){
+										save_button_el.style.display = 'block';
+									}
+								
+								}
+								else{
+									console.error("could not add/update latching counter, somehow the thing and property are not in the persistent data yet.  nice_name, node_name, things: ", nice_name, node_name, this.persistent_data['things']);
+								}
+							
+							});
+						
+						
+						
+							latch_container_el.appendChild(latch_input_el);
+							latch_container_el.appendChild(latch_value_el);
+						
+							ul.appendChild(latch_container_el);
+							
+							
+							
+							// SET OPPOSITE
+							
+							if(opposite_dropdown_list && opposite_dropdown_list.length > 1){
+								let latch_opposite_container_el = document.createElement('li');
+								latch_opposite_container_el.classList.add('extension-buttoninput-overview-latching-opposite-container');
+							
+							
+								let latch_opposite_select_label_el = document.createElement('div');
+								latch_opposite_select_label_el.classList.add('extension-buttoninput-overview-latching-opposite-label');
+								latch_opposite_select_label_el.textContent = 'Negative opposite button: ';
+								
+								let latch_opposite_select_el = document.createElement('select');
+							
+								//latch_opposite_container_el.textContent = JSON.stringify(Object.keys(value.capabilities),null,2);
+							
+								
+								
+								
+								
+							    let default_option_el = document.createElement('option');
+							    default_option_el.value = 'None';
+							    default_option_el.text = 'None';
+								latch_opposite_select_el.appendChild(default_option_el);
+								
+								for (var i = 0; i < opposite_dropdown_list.length; i++) {
+									if(opposite_dropdown_list[i] != node_name){
+									    let option_el = document.createElement('option');
+									    option_el.value = opposite_dropdown_list[i];
+										if(opposite_dropdown_list[i].startsWith('KEY_')){
+											option_el.text = opposite_dropdown_list[i].replace('KEY_','');
+										}else{
+											option_el.text = opposite_dropdown_list[i];
+										}
+									    latch_opposite_select_el.appendChild(option_el);
+									}
+								    
+								}
+								
+								if(typeof this.persistent_data['things'] != 'undefined' && typeof this.persistent_data['things'][nice_name] != 'undefined' && typeof this.persistent_data['things'][nice_name][node_name] != 'undefined' && typeof this.persistent_data['things'][nice_name][node_name]['opposite'] == 'string'){
+									latch_opposite_select_el.value = this.persistent_data['things'][nice_name][node_name]['opposite'];
+								}
+								
+								latch_opposite_select_el.addEventListener('change', () => {
+									//console.log("dropdown changed to: ", latch_opposite_select_el.value );
+									if(latch_opposite_select_el.value == 'None'){
+										if(typeof this.persistent_data['things'][nice_name][node_name]['opposite'] == 'string'){
+											delete this.persistent_data['things'][nice_name][node_name]['opposite'];
+										}
+									}else{
+										this.persistent_data['things'][nice_name][node_name]['opposite'] = latch_opposite_select_el.value;
+									}
+									if(latch_explanation_container_el){
+										latch_explanation_container_el.textContent = generate_explanation(this.persistent_data['things'][nice_name][node_name]);
+									}
+									
+									if(save_button_el){
+										save_button_el.style.display = 'block';
+									}
+									
+								});
+								
+								latch_opposite_container_el.appendChild(latch_opposite_select_label_el);
+								latch_opposite_container_el.appendChild(latch_opposite_select_el);
+							
+								ul.appendChild(latch_opposite_container_el);
+								
+							}
+							
+							
+							
+							
+							if(typeof this.persistent_data['things'] != 'undefined' && typeof this.persistent_data['things'][nice_name] != 'undefined' && typeof this.persistent_data['things'][nice_name][node_name] != 'undefined' ){
+								latch_explanation_container_el.textContent = generate_explanation(this.persistent_data['things'][nice_name][node_name]);
+							}
+							
+							
+							ul.appendChild(latch_explanation_container_el);
+							
+							
+						}
+						
 						
 				        li.appendChild(ul);
 						
@@ -607,7 +877,7 @@
 									//console.log("ACtuALLy NOW PRESSED!: ", node_name);
 									scrolled_into_view = true;
 									setTimeout(() => {
-										console.log("scrolling li item into view: ", li);
+										//console.log("scrolling li item into view: ", li);
 										li.scrollIntoView(true);
 									}, 50);
 									

@@ -401,9 +401,89 @@ body:not(.developer) .extension-buttoninput-show-if-developer{
 
 
 
+#extension-buttoninput-content:not(.extension-buttoninput-show-all) h4:not(.extension-buttoninput-overview-selected),
+#extension-buttoninput-content:not(.extension-buttoninput-show-all) h4:not(.extension-buttoninput-overview-selected) + ul{
+	display:none;
+}
 
 
 
+.extension-buttoninput-overview-latching-container{
+	display:none;
+	margin:1rem 0;
+}
+
+.extension-buttoninput-overview-selected + ul .extension-buttoninput-overview-latching-container{
+	display:flex;
+	align-items: center;
+}
+
+.extension-buttoninput-overview-latching-container input[type="range"]{
+	width:80%;
+	padding:1rem;
+	border-radius:.5rem;
+	background-color:rgba(0,0,0,.6);
+}
+
+.extension-buttoninput-overview-latching-container input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 25px;
+  height: 25px;
+  background: #5d9bc7;
+  cursor: pointer;
+}
+
+.extension-buttoninput-overview-latching-container input::-moz-range-thumb {
+  width: 25px;
+  height: 25px;
+  background: #5d9bc7;
+  cursor: pointer;
+}
+
+.extension-buttoninput-overview-latching-value{
+	width:20%;
+	min-width:50px;
+	padding-left:1rem;
+	overflow:hidden;
+}
+
+
+
+
+.extension-buttoninput-overview-latching-opposite-container{
+	display:none;
+	width:80%;
+	flex-wrap:wrap;
+    align-items: center;
+	margin:1.5rem 0;
+}
+
+.extension-buttoninput-overview-latching-opposite-label{
+	padding:0 1rem .5rem 0;
+}
+
+.extension-buttoninput-overview-latching-show-opposite-selector .extension-buttoninput-overview-latching-opposite-container{
+	display:flex;
+}
+
+.extension-buttoninput-overview-latching-opposite-container select{
+	min-width:150px;
+	flex-grow:1;
+}
+
+
+
+.extension-buttoninput-overview-explanation{
+	font-style:italic;
+	padding:1.5rem;
+	border-left: 1px solid rgba(255, 255, 255, .5);
+	line-height: 170%;
+	opacity:.6;
+}
+.extension-buttoninput-overview-explanation:empty{
+	display:none;
+}
 
 
 span.extension-buttoninput-overview-time-ago,

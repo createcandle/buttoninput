@@ -96,6 +96,7 @@ class ButtonInputAdapter(Adapter):
         self.asyncio_loop = None
 		
         self.devices = {}
+        self.devices_list_changed = False
             
         self.persistent_data = {}
             
@@ -181,6 +182,7 @@ class ButtonInputAdapter(Adapter):
             removed = [f for f in device_list_before if not f in device_list_now]
         
             if added or removed:
+                
                 if self.DEBUG:
                     print("\n\n  ---*   []")
                     print("CONNECTED DEVICES CHANGED!")
@@ -189,10 +191,12 @@ class ButtonInputAdapter(Adapter):
                     print("devices added: ", ", ".join (added))
                     print("devices removed: ", ", ".join (removed))
                 
-                    if self.first_run == False:
+                
+                if self.first_run == False:
+                    self.devices_list_changed = True
+                    if self.DEBUG:
                         if added:
                             self.send_pairing_prompt("A button input device connected")
-                
                         elif removed:
                             self.send_pairing_prompt("A button input device disconnected")
                 
@@ -209,8 +213,28 @@ class ButtonInputAdapter(Adapter):
                 
                 for device_path in removed:
                     if str(device_path) in self.input_data.keys():
-                        print("removing disconnected device from self.input_data: ", str(device_path))
+                        if self.DEBUG:
+                            print("A device disconnected: ", str(device_path))
+                        
+                        if 'nice_name' in self.input_data[device.path]:
+                            thingy = self.get_device(str(self.input_data[device.path]['nice_name']))
+                            if thingy:
+                                if self.DEBUG:
+                                    print("- setting thing to disconnected")
+                                thingy.connected = False
+                                thingy.connected_notify(False)
+                        
+                        if self.DEBUG:
+                            print("- removing disconnected device from self.input_data: ", str(device_path))
                         del self.input_data[ str(device_path) ]
+                        
+                        
+                        
+                        
+                        #self.devices[nice_name].connected = True
+                        #self.devices[nice_name].connected_notify(True)
+                        
+                        
                     else:
                         print("unexpected ERROR: disconnected device path was not already in self.input_data: ", str(device_path))
                 
@@ -218,6 +242,8 @@ class ButtonInputAdapter(Adapter):
                     if self.DEBUG:
                         print("")
                         print("ADDED DEVICE: " + str(event_index) + ". ")
+                
+                
                 
                 
                     
@@ -274,6 +300,16 @@ class ButtonInputAdapter(Adapter):
         
         
                             self.input_data[ str(device.path) ] = {'index':event_index, 'has_buttons':False, 'input_data':[], 'path':str(device.path), 'nice_name':'buttoninput_' + str(device.name).replace(' ','_'), 'phys': str(device.phys) ,'capabilities': clean_caps ,'capabilities_raw': str(device.capabilities(verbose=False))}
+        
+        
+                            #if 'nice_name' in self.input_data[device.path]:
+                            #    thingy = self.get_device(str(self.input_data[device.path]['nice_name']))
+                            #    if thingy:
+                            #        if self.DEBUG:
+                            #            print("- setting thing to connected")
+                            #        if not thingy.connected:
+                            #            thingy.connected = True
+                            #            thingy.connected_notify(True)
         
                             #asyncio.ensure_future(self.print_events(device))
                             event_loop = asyncio.get_event_loop()
@@ -405,17 +441,19 @@ class ButtonInputAdapter(Adapter):
                         # Create the device object
                         #if nice_name in self.devices[nice_name]:
                         #    del self.devices[nice_name]
+                        
+                        if not nice_name in self.devices:
                     
-                        self.devices[nice_name] = ButtonInputDevice(self,nice_name,props)
+                            self.devices[nice_name] = ButtonInputDevice(self,nice_name,props)
             
-                        # Tell the controller about the new device that was created. This will add the new device to self.devices too
-                        self.handle_device_added(self.devices[nice_name])
+                            # Tell the controller about the new device that was created. This will add the new device to self.devices too
+                            self.handle_device_added(self.devices[nice_name])
             
-                        if self.DEBUG:
-                            print("DEBUG: buttoninput_device created: " + str(nice_name))
+                            if self.DEBUG:
+                                print("DEBUG: buttoninput_device created: " + str(nice_name))
                 
-                        self.devices[nice_name].connected = True
-                        self.devices[nice_name].connected_notify(True)
+                            self.devices[nice_name].connected = True
+                            self.devices[nice_name].connected_notify(True)
                     
                     except Exception as ex:
                         if self.DEBUG:
@@ -431,7 +469,7 @@ class ButtonInputAdapter(Adapter):
 
     def run_asyncio_forever(self):
         if self.DEBUG:
-            print("in run_asyncio_forever")
+            print("DEBUG: in run_asyncio_forever")
         while self.running:
             time.sleep(0.5)
                 
@@ -445,7 +483,7 @@ class ButtonInputAdapter(Adapter):
             
                 if self.asyncio_loop:
                     if self.DEBUG:
-                        print("starting asyncio loop")
+                        print("DEBUG: starting asyncio loop")
                     #self.asyncio_loop.run_forever()
                     try:
                         self.asyncio_loop.run_forever()
@@ -476,7 +514,7 @@ class ButtonInputAdapter(Adapter):
     #
 
 
-
+    # NO LONGER USED
     def scan_devices(self):
         if self.DEBUG:
             print("\n0_0_0_0_\nin scan_devices")
@@ -506,10 +544,12 @@ class ButtonInputAdapter(Adapter):
                 try:
                    # for task in asyncio.Task.all_tasks():
                     for task in asyncio.all_tasks():
-                        print("cancelling asyncio task")
+                        if self.DEBUG:
+                            print("cancelling asyncio task")
                         task.cancel()
                 except Exception as ex:
-                    print("scan_devices: failed to stop asyncio tasks first: ", ex)
+                    if self.DEBUG:
+                        print("scan_devices: failed to stop asyncio tasks first: ", ex)
                     
                 if self.DEBUG:
                     print('scan_devices: stopping asyncio loop')
@@ -656,7 +696,7 @@ class ButtonInputAdapter(Adapter):
                 if not device.path in self.input_data:
                     if self.DEBUG:
                         print("ERROR, device path not in self.input_data: " + str(device.path))
-                
+                    continue
                 #if event.type == ecodes.EV_KEY:
                #
                
@@ -861,12 +901,136 @@ class ButtonInputAdapter(Adapter):
                                                 propy = thingy.find_property(short_code)
                                                 if propy:
                                                     #print("found button short_code property too")
+                                                    
+                                                    
+                                                    # Check if the user wants this button press to act like a latching button (non-momentary).
+                                                    latching = 0
+                                                    
+                                                    try:
+                                                        if bool(event.value) and self.persistent_data['things'] and str(self.input_data[device.path]['nice_name']) in self.persistent_data['things'] and short_code in self.persistent_data['things'][str(self.input_data[device.path]['nice_name'])]:
+                                                            thing_settings = self.persistent_data['things'][str(self.input_data[device.path]['nice_name'])][short_code]
+                                                            #print("persistent data property settings. latching?: ", thing_settings)
+                                                            if thing_settings and 'enabled' in thing_settings and thing_settings['enabled'] == True:
+                                                                
+                                                                
+                                                                # TODO: check if this button is the opposite for any other properties
+                                                                for prop_key,details in self.persistent_data['things'][str(self.input_data[device.path]['nice_name'])].items():
+                                                                    print("SEARCHING FOR OPPOSITE MENTION: ", prop_key, " =?= ",short_code, details)
+                                                                    
+                                                                    if 'opposite' in details and details['opposite'] == short_code:
+                                                                        if self.DEBUG:
+                                                                            print("This button is (also) an opposite for another property: ", prop_key)
+                                                                        if 'latched' in details and int(details['latched']) > 0:
+                                                                            latch_propy = thingy.find_property(prop_key + "_latch")
+                                                                            # If latch_propy doesn't exist (yet), then it's value would be zero, and decreasing it wouldn't work anyway. 
+                                                                            #TODO: Could in theory quickly create it with an initial value of zero..
+                                                                            if latch_propy:
+                                                                                latched = int(details['latched']) - 1
+                                                                                
+                                                                                if self.DEBUG:
+                                                                                    print("decreased latch value: ", latched)
+                                                                                
+                                                                                
+                                                                                if latch_propy.set_cached_value_and_notify(latched):
+                                                                                    self.persistent_data['things'][str(self.input_data[device.path]['nice_name'])][prop_key]['latched'] = latched
+                                                                                    self.save_persistent_data()
+                                                                                    #self.persistent_data['things'][str(self.input_data[device.path]['nice_name'])]['latched'] = !latched
+                                                                                    if self.DEBUG:
+                                                                                        print("Decreased the value of a latch property for which this button is a negative opposite")
+                                                                                else:
+                                                                                    if self.DEBUG:
+                                                                                        print("FAILED TO DECREASE LATCHING BUTTON VALUE VIA OPPOSITE")
+                                                                            else:
+                                                                                if self.DEBUG:
+                                                                                    print("Could not find the latch property for which this button is the opposite. Looked for: " + str(prop_key) + "_latch")
+                                                                                
+                                                                               
+                                                                
+                                                                    
+                                                                
+                                                                if 'latching' in thing_settings and thing_settings['latching'] and int(thing_settings['latching']) > 0:
+                                                                    latching = int(thing_settings['latching'])
+                                                            
+                                                                    if self.DEBUG:
+                                                                        print("This is a latching button, with at minimum a virtual on and off state. Latch positions: " + str(latching))
+                                                                    
+                                                                    #print("--LATCHING: ", latching)
+                                                                    #print("--event.value: ", bool(event.value))
+                                                    
+                                                                    latched = 0
+                                                                    
+                                                                    # try to get current latch position from persistent data
+                                                                    if 'latched' in self.persistent_data['things'][str(self.input_data[device.path]['nice_name'])][short_code]:
+                                                                        latched = int(self.persistent_data['things'][str(self.input_data[device.path]['nice_name'])][short_code]['latched'])
+                                                                    else:
+                                                                        if self.DEBUG:
+                                                                            print("Did not find a latched position value in persistent data (yet)")
+                                                                        
+                                                                    if self.DEBUG:
+                                                                        print("latched position before: " + str(latched))
+                                                                    latched += 1
+                                                                    
+                                                                    if latched > latching:
+                                                                        if 'opposite' in thing_settings:
+                                                                            # Do nothing
+                                                                            latched = latching
+                                                                        else:
+                                                                            latched = 0
+                                                                                
+                                                                    if self.DEBUG:
+                                                                        print("latched position after " + str(latched))
+                                                                    
+                                                                    
+                                                                        
+                                                                    
+                                                                    latch_propy = thingy.find_property(short_code + "_latch")
+                                                                    if not latch_propy:
+                                                                        if self.DEBUG:
+                                                                            print("Could not find latch property. Will attemp to quickly create it")
+                                                                        thingy.add_latch_property(str(self.input_data[device.path]['nice_name']), str(short_code))
+                                                                        latch_propy = thingy.find_property(str(short_code) + "_latch")
+                                                    
+                                                                    
+                                                                    if latch_propy:
+                                                                        
+                                                                       if latch_propy.set_cached_value_and_notify(latched):
+                                                                           self.persistent_data['things'][str(self.input_data[device.path]['nice_name'])][short_code]['latched'] = latched
+                                                                           self.save_persistent_data()
+                                                                           #self.persistent_data['things'][str(self.input_data[device.path]['nice_name'])]['latched'] = !latched
+                                                                           if self.DEBUG:
+                                                                               print("BUTTON LATCHED")
+                                                                       else:
+                                                                           if self.DEBUG:
+                                                                               print("FAILED TO SET LATCHING BUTTON VALUE")
+                                                            
+                                                            
+                                                                    else:
+                                                                        if self.DEBUG:
+                                                                            print("Error, could not find or create missing latch property.  short_code: ", short_code)
+                                                            
+                                                            
+                                                            
+                                                                
+                                                    except Exception as ex:
+                                                        if self.DEBUG:
+                                                            print("caught error attempting latching feature: ", ex)
+                                                    
+                                                    
+                                                    
+                                                    
+                                                    # Always set the momentary property
                                                     if propy.set_cached_value_and_notify(bool(event.value)):
                                                         #print("OK, button value set")
                                                         pass
                                                     else:
                                                         #print("FAILED TO SET BUTTON VALUE")
                                                         pass
+                                                        
+                                                        
+                                                else:
+                                                    if self.DEBUG:
+                                                        print("Notice: the thing exists, but it has no property matcning this button press (yet)")
+                                                    
                                             else:
                                                 if self.DEBUG:
                                                     print("button press, but no thing found for device NiceName: " + str(self.input_data[device.path]['nice_name']));
@@ -1040,10 +1204,10 @@ class ButtonInputDevice(Device):
         self.description = 'A connected human input device'
         
         
-        on_off_property_set = False
+        self.on_off_property_set = False
         
         # self._type = ['MultiLevelSwitch'] # a combination of a toggle switch and a numeric value
-
+        
         try:
             
             for prop_key, prop_details in props.items():
@@ -1084,8 +1248,8 @@ class ButtonInputDevice(Device):
                                 'type': 'boolean'
                             }
                     
-                    if on_off_property_set == False:
-                        on_off_property_set = True
+                    if self.on_off_property_set == False:
+                        self.on_off_property_set = True
                         desc['@type'] = 'PushedProperty'
                         #self['@type'] = 'PushButton'
                         self._type = ['PushButton']
@@ -1097,12 +1261,91 @@ class ButtonInputDevice(Device):
                                     desc,
                                     False)
                 
+                    # Attempt to add a switch version of this property, which depends on latching persistent_data being available and set
+                    try:
+                        self.add_latch_property(nice_name,prop_key)
+                    except Exception as ex:
+                        print("caught error adding latch property during device init: " + str(ex))
                 
             
 
         except Exception as ex:
             if self.DEBUG:
                 print("error adding properties to thing: " + str(ex))
+
+
+
+    # used to add missing latching properties on demand
+    def add_latch_property(self,nice_name,prop_key):
+        
+        if self.DEBUG:
+            print("in add_latch_property.  nice_name,prop_key: ", nice_name, prop_key)
+        
+        if not nice_name:
+            if self.DEBUG:
+                print("add_latch_property: invalid nice_name")
+            return None
+            
+        if not prop_key:
+            if self.DEBUG:
+                print("add_latch_property: invalid prop_key")
+            return None
+        
+        initial_value = 0
+        
+        clean_prop_name = prop_key.replace('BTN_','').replace('KEY_','').replace('ABS_','').replace('REL_','')
+        
+        clean_prop_name = clean_prop_name + " switch"
+        
+        
+        desc = {
+            #'@type': 'OnOffProperty', # by giving the property this "capability", it will create a special icon indicating what it can do. Note that it's a string (while on the device it's an array).
+            'title': clean_prop_name,
+            'readOnly': True,
+            #'type': 'boolean',
+            'type': 'integer',
+            #'minimum': 0,
+            #'maximum':
+        }
+    
+        #if latching > 1:
+        #    desc['type'] = 'integer'
+        #    desc['minimum'] = 0
+        #    desc['maximum'] = latching
+    
+        #if latching == 1:
+        #    desc['@type'] = 'OnOffProperty';
+        
+        latching = 0
+        if self.adapter.persistent_data['things'] and str(nice_name) in self.adapter.persistent_data['things'] and str(prop_key) in self.adapter.persistent_data['things'][str(nice_name)]:
+            thing_settings = self.adapter.persistent_data['things'][str(nice_name)][str(prop_key)]
+            if thing_settings and 'enabled' in thing_settings and thing_settings['enabled'] == True:
+                if 'latching' in thing_settings and int(thing_settings['latching']) > 0:
+                    latching = int(thing_settings['latching'])
+                    
+                    if 'latched' in thing_settings:
+                        if self.DEBUG:
+                            print("add_latch_property: found initial latched value: ", thing_settings['latched'])
+                        initial_value = int(thing_settings['latched'])
+                        
+                        
+                    self.properties[prop_key + "_latch"] = ButtonInputProperty(
+                                    self,
+                                    prop_key + "_latch",
+                                    desc,
+                                    initial_value)
+                    return self.properties[prop_key + "_latch"]
+            
+        print("device: add_latch_property: --LATCHING: ", latching)
+        
+        
+        return None
+        
+                    
+        
+        
+        
+        
 
 
     def get_props(self):
@@ -1151,6 +1394,7 @@ class ButtonInputProperty(Property):
         
         if self.DEBUG:
             print("DEBUG: property: initiated: " + str(self.id) + " (" + str(self.title) + "), of type: " +  str(self.type) + ", with value: " + str(value))
+
 
     def set_cached_value_and_notify(self, value):
         old_value = self.value
@@ -1285,6 +1529,34 @@ class ButtonInputAPIHandler(APIHandler):
                         
                     
                     
+                    
+                    # HANDLE POLL REQUEST
+                    elif action == 'poll':
+                        if self.DEBUG:
+                            print("API: in poll")
+                        
+                        state = True
+                        
+                        if self.adapter.devices_list_changed:
+                            return APIResponse(
+                              status=200,
+                              content_type='application/json',
+                              content=json.dumps({'state':state, 'input_data':self.adapter.input_data, 'persistent_data':self.adapter.persistent_data}),
+                            )
+                        else:
+                            return APIResponse(
+                              status=200,
+                              content_type='application/json',
+                              content=json.dumps({'state':state}),
+                            )
+                        
+                        
+                        
+                        
+                    
+                    
+                    
+                    
                     # GET INPUT_DATA
                     elif action == 'get_input_data':
                         if self.DEBUG:
@@ -1325,7 +1597,7 @@ class ButtonInputAPIHandler(APIHandler):
                                 self.adapter.persistent_data = request.body['persistent_data']
                                 self.adapter.save_persistent_data()
                                 self.adapter.generate_things()
-                                self.send_pairing_prompt("Button things created/updated")
+                                self.adapter.send_pairing_prompt("Button things created/updated")
                             
                                 state = True
                                 
