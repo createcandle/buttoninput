@@ -47,6 +47,25 @@
     cursor:pointer;
 }
 
+.extension-buttoninput-busy-scanning #extension-buttoninput-add-button:before{
+    content: 'PRESS A BUTTON ';
+    position: absolute;
+    right: 5.6rem;
+    top: 1rem;
+    width: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, .3);
+    /* padding: 1rem; */
+    height: 3.6rem;
+    border-bottom-left-radius: .5rem;
+    border-top-left-radius: .5rem;
+    color: white;
+	font-size:80%;
+}
+
+
 #extension-buttoninput-save-button{
 	position: fixed;
 	bottom: 2rem;
@@ -500,30 +519,35 @@ span.extension-buttoninput-overview-value{
 
 
 
-.extension-buttoninput-overview-syn:before{
-	content:'🪃';
-	display:inline-block;
-	margin-right:1.5rem;
-}
+
+
+
+#extension-buttoninput-overview h2:before,
 .extension-buttoninput-overview-key:before,
 .extension-buttoninput-overview-btn:before{
 	content:'🔘';
 	display:inline-block;
 	margin-right:1.5rem;
 }
-.extension-buttoninput-overview-abs:before{
+#extension-buttoninput-overview .extension-buttoninput-overview-abs:before{
 	content:'💫';
 	display:inline-block;
 	margin-right:1.5rem;
 }
 
-.extension-buttoninput-overview-msc:before{
+#extension-buttoninput-overview .extension-buttoninput-overview-syn:before{
+	content:'🪃';
+	display:inline-block;
+	margin-right:1.5rem;
+}
+
+#extension-buttoninput-overview .extension-buttoninput-overview-msc:before{
 	content:'🧪';
 	display:inline-block;
 	margin-right:1.5rem;
 }
 
-.extension-buttoninput-overview-ff:before{
+#extension-buttoninput-overview .extension-buttoninput-overview-ff:before{
 	content:'✨';
 	display:inline-block;
 	margin-right:1.5rem;
@@ -535,7 +559,7 @@ span.extension-buttoninput-overview-value{
 .extension-buttoninput-overview-abs,
 .extension-buttoninput-overview-rel,
 .extension-buttoninput-overview-msc{
-	padding-left:.5rem;
+	/*padding-left:.5rem;*/
 }
 
 
@@ -609,7 +633,23 @@ span.extension-buttoninput-overview-value{
 
 
 
+#extension-buttoninput-footer{
+	padding-top:.5rem;
+	display:flex;
+	flex-wrap:wrap;
+	justify-content: center;
+}
 
+#extension-buttoninput-footer > div{
+	flex-basis: 33.3%;
+	min-width:150px;
+}
+
+#extension-buttoninput-footer > div p{
+	padding:0 1.5rem 0 .5rem;
+	opacity:.6;
+	font-style:italic;
+}
 
 
 #extension-buttoninput-not-ready-warning,
@@ -630,6 +670,7 @@ span.extension-buttoninput-overview-value{
     color:white;
     border-radius:.5rem;
 }
+
 
 
 @media screen and (max-width: 800px) {
