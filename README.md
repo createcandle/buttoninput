@@ -6,3 +6,5 @@ You can select which buttons you want to track, and set the frequency with which
 
 ![Screenshot](https://github.com/createcandle/buttoninput/blob/main/screenshot.png?raw=true)
 
+
+![Screenshot](https://github.com/createcandle/buttoninput/blob/main/screenshot.jpg?raw=true)
