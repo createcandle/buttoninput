@@ -20,6 +20,7 @@ echo
 echo "."
 echo ".."
 echo "package.sh: creating addon version: $version"
+echo "package.sh: RELEASE_VERSION from environment?: -->$RELEASE_VERSION<--"
 
 echo "package.sh: runnng on OS:"
 uname -a
