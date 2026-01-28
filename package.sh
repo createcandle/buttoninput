@@ -39,14 +39,14 @@ echo "package.sh: removing any old files first"
 rm -rf *.tgz *.sha256sum package SHA256SUMS lib
 
 if [ -z "${ADDON_ARCH}" ]; then
-  TARFILE_SUFFIX=
+    TARFILE_SUFFIX=
 else
-  PYTHON_VERSION="$(python3 --version 2>&1 | cut -d' ' -f2 | cut -d. -f 1-2) | tr -d '\n'"
-  TARFILE_SUFFIX="-${ADDON_ARCH}-v${PYTHON_VERSION}"
+    PYTHON_VERSION="$(python3 --version 2>&1 | cut -d' ' -f2 | cut -d. -f 1-2 | tr -d '\n')"
+    TARFILE_SUFFIX="-${ADDON_ARCH}-v${PYTHON_VERSION}"
 fi
 
 echo
-echo "package.sh: ARFILE_SUFFIX: $TARFILE_SUFFIX"
+echo "package.sh: TARFILE_SUFFIX: $TARFILE_SUFFIX"
 echo
 
 
