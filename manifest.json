@@ -52,7 +52,7 @@
     }
   },
   "short_name": "buttoninput",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "web_accessible_resources": [
     "css/*.css",
     "images/*.svg",
