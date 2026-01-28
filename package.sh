@@ -24,8 +24,11 @@ echo "package.sh: RELEASE_VERSION from environment?: -->$RELEASE_VERSION<--"
 
 echo "package.sh: runnng on OS:"
 uname -a
+echo "main python3 version:"
+python3 --version
 
-
+echo "installed python versions:"
+ls /usr/bin/python*
 
 #set -x
 
