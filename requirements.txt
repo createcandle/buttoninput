@@ -1,2 +1,2 @@
-evdev-binary
 requests
+evdev
