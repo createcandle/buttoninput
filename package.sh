@@ -36,6 +36,14 @@ ls /usr/bin/python*
 [ $(id -u) = 0 ] && umask 0
 
 #apt install libcairo2-dev pkg-config python3-dev
+sudo apt-get install python3-dev
+if [ "$EUID" -ne 0 ]; then
+  sudo apt update -qq
+  sudo apt-get install python3-dev
+else
+  apt update -qq
+  apt-get install python3-dev
+fi
 
 # Clean up from previous releases
 echo "package.sh: removing any old files first"
