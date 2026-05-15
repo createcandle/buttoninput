@@ -18,6 +18,7 @@
 		
 		this.update_countdown = 0;
 		this.received_poll = true;
+		this.busy_getting_input_data = false;
 		
 		this.jwt = localStorage.getItem('jwt');
 		
@@ -80,18 +81,19 @@
 					this.received_poll = false;
 	    	        window.API.postJson(
 	    	          `/extensions/${this.id}/api/ajax`,
-	                    {	'action':'poll'
-						}
+	                    {'action':'poll'}
 
 	    	        ).then((body) => {
 						this.received_poll = true;
 						if(typeof body.input_data != 'undefined'){
-							console.log("buttoninput: poll: received updated device data: ", body.input_data);
+							//console.log("buttoninput: poll: received updated device data: ", body.input_data);
 							this.handle_input_data(body.input_data);
 						}
 					
 	    	        }).catch((err) => {
-	    	          	console.error("buttoninput: caught error doing poll: ", err);
+						if(this.debug){
+							console.error("button input debug: caught error doing poll: ", err);
+						}
 						this.received_poll = true;
 	    	        });	
 						
@@ -264,7 +266,7 @@
 		let rescan_button_el = document.getElementById('extension-buttoninput-rescan-button');
 		if(rescan_button_el){
 			rescan_button_el.addEventListener('click', () => {
-				
+				rescan_button_el.classList.add('extension-buttoninput-hidden');
     	  		// Get list of items
     	        window.API.postJson(
     	          `/extensions/${this.id}/api/ajax`,
@@ -275,6 +277,10 @@
     	        ).then((body) => {
                 	//console.log("rescan response: ", body);
 					
+					if(typeof body.debug == 'boolean'){
+						this.debug = body.debug;
+					}
+					
 					if(typeof body.persistent_data != 'undefined'){
 						this.persistent_data = body.persistent_data;
 					}
@@ -282,15 +288,22 @@
 					if(typeof body.input_data != 'undefined'){
 						this.handle_input_data(body.input_data);
 					}
+					setTimeout(() => {
+						rescan_button_el.classList.remove('extension-buttoninput-hidden');
+					},2000);
                     
     	        }).catch((err) => {
-    	          	console.error("caught error calling API rescan action: ", err);
+					if(this.debug){
+						console.error("button input debug: caught error calling API rescan action: ", err);
+					}
+					rescan_button_el.classList.remove('extension-buttoninput-hidden');
+    	          	
     	        });	
 				
 			})
 		}
 		else{
-			console.error("no rescan button found");
+			console.error("button input: no rescan button found");
 		}
 
 
@@ -298,7 +311,9 @@
 		if(save_button_el){
 			save_button_el.style.display = 'none';
 			save_button_el.addEventListener('click', () => {
-				//console.log("clicked on save_persistent_data button");
+	          	if(this.debug){
+					console.log("button input debug: clicked on save_persistent_data button");
+				}
 				save_button_el.style.display = 'none';
 				
     	  		// Get list of items
@@ -331,9 +346,15 @@
 						this.handle_input_data(body.input_data);
 					}
 					*/
+					
+					setTimeout(() => {
+						save_button_el.style.display = 'block';
+					},5000);
                     
     	        }).catch((err) => {
-    	          	console.error("caught error calling API save_persistent_data action: ", err);
+    	          	if(this.debug){
+						console.error("button input debug: caught error calling API save_persistent_data action: ", err);
+					}
 					save_button_el.style.display = 'block';
     	        });	
 				
@@ -350,9 +371,22 @@
 			})
 		}
 		else{
-			console.error("no rescan button found");
+          	if(this.debug){
+				console.error("button input debug: no rescan button found");
+			}
 		}
+
+
 		
+		let title_el = document.getElementById('extension-buttoninput-title');
+		if(title_el){
+			title_el.addEventListener('click', () => {
+				this.view.classList.add('extension-buttoninput-easter-egg');
+				setTimeout(() => {
+					this.view.classList.remove('extension-buttoninput-easter-egg');
+				},1000);
+			})
+		}
 		/*
 		let update_button_el = document.getElementById('extension-buttoninput-update-button');
 		if(update_button_el){
@@ -380,61 +414,69 @@
 	get_input_data(){
 		
 		//console.log("in get_input_data");
-		
-  		// Get updated data
-        window.API.postJson(
-          `/extensions/buttoninput/api/ajax`,
-            {	'action':'get_input_data',
-				'jwt':this.jwt
-			}
-
-        ).then((body) => {
-        	//console.log("get_input_data response: ", body);
+		if(this.busy_getting_input_data == false){
+			this.busy_getting_input_data = true;
 			
-			if(typeof body.persistent_data != 'undefined' && body.persistent_data != null){
-				this.persistent_data = body.persistent_data;
-			}
-			
-			if(typeof body.input_data != 'undefined'){
-				this.handle_input_data(body.input_data);
-			}
-			if(this.update_countdown > 0){
-				this.update_countdown--;
-				if(this.add_button){
-					this.add_button.innerHTML = this.update_countdown;
+	  		// Get updated data
+	        window.API.postJson(
+	          `/extensions/buttoninput/api/ajax`,
+	            {	'action':'get_input_data',
+					'jwt':this.jwt
 				}
+
+	        ).then((body) => {
+	        	//console.log("get_input_data response: ", body);
+			
+				if(typeof body.persistent_data != 'undefined' && body.persistent_data != null){
+					this.persistent_data = body.persistent_data;
+				}
+			
+				if(typeof body.input_data != 'undefined'){
+					this.handle_input_data(body.input_data);
+				}
+				if(this.update_countdown > 0){
+					this.update_countdown--;
+					if(this.add_button){
+						this.add_button.innerHTML = this.update_countdown;
+					}
+					setTimeout(() => {
+						this.get_input_data()
+					},1000);
+				}
+				else{
+					if(this.add_button){
+						this.add_button.innerHTML = '';
+					}
+					const content_el = document.getElementById('extension-buttoninput-content');
+					if(content_el){
+						content_el.classList.remove('extension-buttoninput-busy-scanning')
+					}
+				}
+				this.busy_getting_input_data = false;
+            
+	        }).catch((err) => {
+	          	if(this.debug){
+					console.error("button input debug: caught error calling API get_input_data action: ", err);
+				}
+				/*
+				const error_el = document.getElementById('extension-buttoninput-overview-error');
+				if(error_el){
+					error_el.style.display = 'block';
+					setTimeout(() => {
+						error_el.style.display = 'none';
+					},10000);
+				}
+				*/
+				this.busy_getting_input_data = false;
+			
+				/*
 				setTimeout(() => {
 					this.get_input_data()
-				},1000);
-			}
-			else{
-				if(this.add_button){
-					this.add_button.innerHTML = '';
-				}
-				const content_el = document.getElementById('extension-buttoninput-content');
-				if(content_el){
-					content_el.classList.remove('extension-buttoninput-busy-scanning')
-				}
-			}
-			
-            
-        }).catch((err) => {
-          	console.error("caught error calling API get_input_data action: ", err);
-			
-			const error_el = document.getElementById('extension-buttoninput-overview-error');
-			if(error_el){
-				error_el.style.display = 'block';
-				setTimeout(() => {
-					error_el.style.display = 'none';
-				},10000);
-			}
-			
-			/*
-			setTimeout(() => {
-				this.get_input_data()
-			},3000);
-			*/
-        });	
+				},3000);
+				*/
+	        });	
+		}
+  		
 	}
 	
 	
@@ -443,6 +485,11 @@
 		
 		//console.log("buttoninput: in handle_input_data.  input_data: ", input_data);
 		//console.log("buttoninput: in handle_input_data.  persistent_data: ", this.persistent_data);
+		
+		if(input_data && typeof input_data['debug'] == 'boolean'){
+			this.debug = input_data['debug'];
+		}
+		
 		
 		const overview_el = document.getElementById('extension-buttoninput-overview');
 		if(overview_el){
@@ -583,7 +630,7 @@
 					
 					if(depth == 3){
 						opposite_dropdown_list = Object.keys(node);
-						console.log("opposite_dropdown_list is now: ", opposite_dropdown_list);
+						//console.log("opposite_dropdown_list is now: ", opposite_dropdown_list);
 					}
 					
 					
@@ -776,7 +823,9 @@
 								
 								}
 								else{
-									console.error("could not add/update latching counter, somehow the thing and property are not in the persistent data yet.  nice_name, node_name, things: ", nice_name, node_name, this.persistent_data['things']);
+				    	          	if(this.debug){
+										console.error("button input debug: could not add/update latching counter, somehow the thing and property are not in the persistent data yet.  nice_name, node_name, things: ", nice_name, node_name, this.persistent_data['things']);
+									}
 								}
 							
 							});

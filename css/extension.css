@@ -17,7 +17,7 @@
     margin: 0 auto;
     display: block;
     padding: .5rem;
-    padding-left: 6.8rem;
+    padding-left: 5.5rem;
     font-size: 1.8rem;
     background-size: 3.2rem;
     background-repeat: no-repeat;
@@ -34,6 +34,19 @@
 	border: none;
 }
 
+#extension-buttoninput-footer button{
+	font-size:2rem;
+	padding:1rem 2rem;
+}
+
+#extension-buttoninput-view.extension-buttoninput-easter-egg{
+	filter: invert(1);
+}
+
+
+.extension-buttoninput-hidden{
+	display:none!important;
+}
 
 
 
@@ -229,10 +242,6 @@
 }
 
 
-#extension-buttoninput-view .extension-buttoninput-limit:focus{
-}
-
-
 .extension-buttoninput-item-sentence > span{
 	display:inline-block;
 }
@@ -304,9 +313,6 @@
 	background-size: .65em auto, 100%;
 	*/
 	
-}
-
-#extension-buttoninput-view select:focus{
 }
 
 
@@ -558,14 +564,16 @@ span.extension-buttoninput-overview-value{
 	margin-right:1.5rem;
 }
 
+/*
 .extension-buttoninput-overview-syn,
 .extension-buttoninput-overview-key,
 .extension-buttoninput-overview-btn,
 .extension-buttoninput-overview-abs,
 .extension-buttoninput-overview-rel,
 .extension-buttoninput-overview-msc{
-	/*padding-left:.5rem;*/
+	padding-left:.5rem;
 }
+*/
 
 
 

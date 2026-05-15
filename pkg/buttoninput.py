@@ -1519,10 +1519,6 @@ class ButtonInputAPIHandler(APIHandler):
                           status=200,
                           content_type='application/json',
                           content=json.dumps({
-                                      'a_number_setting':self.adapter.a_number_setting,
-                                      'thing_state' : self.adapter.persistent_data['state'],
-                                      'slider_value':self.adapter.persistent_data['slider'],
-                                      'items_list':self.adapter.items_list,
                                       'debug': self.adapter.DEBUG
                                       }),
                         )
@@ -1541,7 +1537,12 @@ class ButtonInputAPIHandler(APIHandler):
                             return APIResponse(
                               status=200,
                               content_type='application/json',
-                              content=json.dumps({'state':state, 'input_data':self.adapter.input_data, 'persistent_data':self.adapter.persistent_data}),
+                              content=json.dumps({
+                                      'state':state, 
+                                      'input_data':self.adapter.input_data, 
+                                      'persistent_data':self.adapter.persistent_data,
+                                      'debug': self.adapter.DEBUG
+                                  }),
                             )
                         else:
                             return APIResponse(
@@ -1578,7 +1579,12 @@ class ButtonInputAPIHandler(APIHandler):
                         return APIResponse(
                           status=200,
                           content_type='application/json',
-                          content=json.dumps({'state':state, 'input_data':self.adapter.input_data,'persistent_data':self.adapter.persistent_data}),
+                          content=json.dumps({
+                                  'state':state, 
+                                  'input_data':self.adapter.input_data,
+                                  'persistent_data':self.adapter.persistent_data,
+                                  'debug': self.adapter.DEBUG
+                              }),
                         )
                     
                     
@@ -1608,7 +1614,11 @@ class ButtonInputAPIHandler(APIHandler):
                         return APIResponse(
                           status=200,
                           content_type='application/json',
-                          content=json.dumps({'state':state, 'input_data':self.adapter.input_data,'persistent_data':self.adapter.persistent_data}),
+                          content=json.dumps({
+                                  'state':state, 
+                                  'input_data':self.adapter.input_data,
+                                  'persistent_data':self.adapter.persistent_data
+                              }),
                         )
                     
                     
@@ -1631,7 +1641,12 @@ class ButtonInputAPIHandler(APIHandler):
                         return APIResponse(
                           status=200,
                           content_type='application/json',
-                          content=json.dumps({'state':state, 'input_data':self.adapter.input_data, 'persistent_data':self.adapter.persistent_data}),
+                          content=json.dumps({
+                                  'state':state, 
+                                  'input_data':self.adapter.input_data, 
+                                  'persistent_data':self.adapter.persistent_data,
+                                  'debug': self.adapter.DEBUG
+                              }),
                         )
                     
                     
