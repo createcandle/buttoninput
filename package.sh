@@ -1,6 +1,9 @@
 #!/bin/bash 
 
-ADDON_ARCH="$1"
+
+if [[ -z "$ADDON_ARCH" ]]; then
+  ADDON_ARCH="$1"
+fi
 #LANGUAGE_NAME="$2"
 #PYTHON_VERSION="$3"
 
